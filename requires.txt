@@ -1,1 +1,1 @@
-metaobject>=0.1.0
+metaobject>=0.1.1
