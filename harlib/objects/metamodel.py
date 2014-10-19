@@ -10,7 +10,6 @@
 from __future__ import absolute_import
 
 import collections
-import cookielib
 import httplib
 import json
 import logging

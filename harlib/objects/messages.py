@@ -10,12 +10,14 @@
 from __future__ import absolute_import
 
 import collections
-import cookielib
 import httplib
 import json
 import requests
 import urllib
 import urllib2
+import six
+
+from six.moves import http_cookiejar
 
 try:
     import urllib3
@@ -124,7 +126,7 @@ class HarCookie(HarNameValuePair):
             har['name'] = obj[0]
             har['value'] = obj[1]
 
-        if isinstance(obj, cookielib.Cookie):
+        if isinstance(obj, http_cookiejar.Cookie):
             har = dict()
             har['name'] = obj.name
             har['value'] = obj.value
