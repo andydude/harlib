@@ -153,7 +153,6 @@ class HarResponse(HarMessage):
             har['headersSize'] = -1
             har['bodySize'] = -1
 
-            # OneResponse additions
             if hasattr(obj, 'check_result'):
                 har['_checkResult'] = obj.check_result
             if hasattr(obj, 'parse_result'):

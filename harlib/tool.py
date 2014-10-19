@@ -14,8 +14,6 @@ from __future__ import absolute_import
 import collections
 import json
 
-import one.utils
-
 def by_name(har):
     return har['name']
 
@@ -53,7 +51,8 @@ def sorted_har(har):
 def har_sort_main():
     import sys
     filename = sys.argv[1]
-    d = json.loads(one.utils.file_slurp(filename), object_pairs_hook=collections.OrderedDict)
+    with open(filename, 'r') as f:
+        d = json.load(f, object_pairs_hook=collections.OrderedDict)
     d = sorted_har(d)
     print(json.dumps(d, indent=2, default=str, separators=(',',': ')))
 
