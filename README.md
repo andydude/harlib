@@ -1,4 +1,4 @@
 harlib
 ======
 
-HTTP Archive (HAR) library for Python
+HTTP Archive (HAR) format library for Python
