@@ -10,12 +10,11 @@
 from __future__ import absolute_import
 
 import collections
-import cookielib
-import httplib
 import json
 import requests
-import urllib
-import urllib2
+import six
+
+from six.moves import http_client as httplib
 
 try:
     import urllib3

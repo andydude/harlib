@@ -8,19 +8,12 @@
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
-
+from metaobject import MetaObject
 import collections
-import httplib
 import json
 import logging
-import requests
-import urllib
-import urllib2
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
-
-from metaobject import MetaObject
 
 # Superclass for all HAR model objects
 class HarObject(MetaObject):

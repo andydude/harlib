@@ -8,15 +8,6 @@
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
-
-import collections
-import cookielib
-import httplib
-import json
-import requests
-import urllib
-import urllib2
-
 from .metamodel import HarObject
 
 class HarClientOptions(HarObject):
