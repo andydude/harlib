@@ -33,8 +33,6 @@ class DjangoCodec(object):
 
     def encode(self, har, raw_class):
         assert raw_class.__module__ in self.modules
-        assert (str(raw_class).startswith(self.prefixes[0]) or
-                str(raw_class).startswith(self.prefixes[1]))
         method_name = 'encode_%s_to_%s' % (
             har.__class__.__name__, raw_class.__name__)
         return getattr(self, method_name)(har)
