@@ -131,7 +131,21 @@ class DjangoCodec(object):
 
     decode_HarRequest_from_WSGIRequest = decode_HarRequest_from_HttpRequest
     decode_HarRequestBody_from_WSGIRequest = decode_HarRequestBody_from_HttpRequest
-    decode_HarResponse_from_HttpResponseServerError = decode_HarResponse_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseServerError = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponse_from_HttpResponseRedirect = decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponsePermanentRedirect = decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseNotModified = decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseBadRequest = decode_HarResponse_from_HttpResponse
     decode_HarResponse_from_HttpResponseNotFound = decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseForbidden = decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseNotAllowed = decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseGone = decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseServerError = decode_HarResponse_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseRedirect = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponsePermanentRedirect = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseNotModified = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseBadRequest = decode_HarResponseBody_from_HttpResponse
     decode_HarResponseBody_from_HttpResponseNotFound = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseForbidden = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseNotAllowed = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseGone = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseServerError = decode_HarResponseBody_from_HttpResponse
