@@ -34,4 +34,10 @@ if __name__ == '__main__':
 
 else:
     from .objects import *
-    from .sessions import HarSessionMixin, HarSession
+
+    # only import HarSession if requests is installed
+    try:
+        import requests
+        from .sessions import HarSessionMixin, HarSession
+    except ImportError:
+        pass

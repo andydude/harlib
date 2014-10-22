@@ -13,14 +13,14 @@ harlib - HTTP Archive (HAR) format library
 from __future__ import absolute_import
 
 import json
-import urllib
-import urllib2
+import six
 import unittest
+import harlib
+from six.moves import http_client, urllib
+from .utils import TestUtils
 
-from ... import har
-
-class TestUrllib2OpenerDirector(unittest.TestCase):
-    Opener = staticmethod(urllib2.OpenerDirector)
+class TestUrllib2OpenerDirector(TestUtils):
+    Opener = staticmethod(urllib.request.OpenerDirector)
 
     def setUp(self):
         self.req = self.Connection('httpbin.org')
@@ -28,8 +28,8 @@ class TestUrllib2OpenerDirector(unittest.TestCase):
     def tearDown(self):
         pass
 
-class TestUrllib2Request(unittest.TestCase):
-    Request = staticmethod(urllib2.Request)
+class TestUrllib2Request(TestUtils):
+    Request = staticmethod(urllib.request.Request)
 
     def setUp(self):
         self.req = self.Request('http://httpbin.org/post', 
@@ -41,7 +41,7 @@ class TestUrllib2Request(unittest.TestCase):
 
     def test_1_from_urllib2(self):
 
-        har_req = har.HarRequest(self.req)
+        har_req = harlib.HarRequest(self.req)
         self.assertEqual(har_req.method, 'POST')
         self.assertEqual(har_req.url, 'http://httpbin.org/post')
         self.assertEqual(har_req.httpVersion, 'HTTP/1.1')
@@ -55,20 +55,12 @@ class TestUrllib2Request(unittest.TestCase):
         self.assertEqual(har_req.postData.params[1].value, 'yes')
 
     def test_2_to_urllib2(self):
-        har_req = har.HarRequest(self.req)
-        to_req = har_req.to_urllib2()
-        self.assertEqual(to_req.__class__, urllib2.Request)
-        self.assertEqual(to_req.get_full_url(), self.req.get_full_url())
-        self.assertEqual(to_req.type, self.req.type)
-        self.assertEqual(to_req.host, self.req.host)
-        self.assertEqual(to_req.port, self.req.port)
-        self.assertEqual(to_req.data, self.req.data)
-        self.assertEqual(to_req.headers, self.req.headers)
-        self.assertEqual(to_req.unverifiable, self.req.unverifiable)
-        self.assertEqual(to_req.origin_req_host, self.req.origin_req_host)
+        har_req = harlib.HarRequest(self.req)
+        to_req = har_req.encode(urllib.request.Request)
+        self.assertEqualUrllib2Request(to_req, self.req)
 
-class TestUrllib2Response(unittest.TestCase):
-    Request = staticmethod(urllib2.Request)
+class TestUrllib2Response(TestUtils):
+    Request = staticmethod(urllib.request.Request)
 
     def setUp(self):
         self.req = self.Request('http://httpbin.org/post', 
@@ -79,10 +71,10 @@ class TestUrllib2Response(unittest.TestCase):
         pass
 
     def test_1_from_urllib2(self):
-        resp = urllib2.urlopen(self.req)
-        self.assertEqual(resp.__class__, urllib.addinfourl)
+        resp = urllib.request.urlopen(self.req)
+        self.assertEqual(resp.__class__, urllib.response.addinfourl)
 
-        har_resp = har.HarResponse(resp)
+        har_resp = harlib.HarResponse(resp)
         self.assertEqual(har_resp.status, 200)
         self.assertEqual(har_resp.statusText, 'OK')
         self.assertEqual(har_resp.httpVersion, 'HTTP/1.1')

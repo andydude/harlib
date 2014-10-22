@@ -12,8 +12,10 @@ harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
 from collections import OrderedDict
+import multipart
+import six
 
-def emit_http_version(num):
+def render_http_version(num):
     '''
     Function from ._httpVersionNumber to .httpVersion
     '''
@@ -26,6 +28,66 @@ def parse_http_version(s):
     '''
     if s.upper() == 'SPDY': return 19
     return int(float(s.split('/', 1)[1])*10.0)
+
+def parse_pair(item):
+    if '=' not in item:
+        item += '='
+        #raise ValueError(repr(item), 'must be of the form A = B')
+    if '&' in item:
+        raise ValueError(repr(item), 'must split on "&" first')
+    name, value = item.split('=')
+    return {'name': name, 'value': value}
+
+def dict_from_pair(pair):
+    return {'name': pair[0], 'value': pair[1]}
+
+def pair_from_dict(data):
+    return (data['name'], data['value'])
+
+def pair_from_obj(data):
+    return (data.name, data.value)
+
+def decode_multipart(o, content_type, **kwargs):
+    har = []
+    if isinstance(o, basestring):
+        content_type, options = multipart.parse_options_header(content_type)
+        assert content_type == 'multipart/form-data'
+        stream = six.BytesIO(o)
+        boundary = six.binary_type(options.get('boundary'))
+        assert boundary
+        for part in multipart.MultipartParser(stream, boundary, len(o), **kwargs):
+            if part.filename or not part.is_buffered():
+                param = {'name': part.name, 'value': str(part.value), 'filename': str(part.filename)}
+            else: # TODO: Big form-fields are in the files dict. really?
+                param = {'name': part.name, 'value': str(part.value)}
+            har.append(param)
+
+    return har
+
+def decode_query(o):
+    har = []
+    if isinstance(o, basestring):
+        from requests.packages import urllib3 as urllib3r
+        query = urllib3r.util.parse_url(o).query
+        if query is None: return []
+        pairs = query.split('&')
+        pairs = filter(lambda it: it != '', pairs)
+        har = map(parse_pair, pairs)
+    return har
+
+def encode_query(d):
+    har = ''
+    if isinstance(d, dict):
+        d = d.items()
+    if isinstance(d, list):
+        if isinstance(d[0], collections.Mapping):
+            d = map(lambda p: (p['name'], p['value']), d)
+        for name, value in d:
+            har += '&' + str(name) + '=' + str(value)
+    if har != '':
+        return har[1:]
+    else:
+        return ''
 
 ## SocketOption stuff
 
@@ -169,7 +231,6 @@ try:
     }
     
     def xml_dump_named_tree(key, value, soup=None, default=str):
-        #print("--- xml_dump_named_tree(%s, %s)" % (key, value))
         tag = soup.new_tag(name=key)
         if isinstance(value, list):
             tag.contents = []

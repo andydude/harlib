@@ -7,19 +7,13 @@
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+'''
+'''
 from __future__ import absolute_import
-
 import collections
 import json
-import requests
 import six
-
-from six.moves import http_client as httplib
-
-try:
-    import urllib3
-except ImportError:
-    from requests.packages import urllib3
+from six.moves import (http_client, urllib)
 
 from .metamodel import HarObject
 
@@ -196,162 +190,84 @@ class HarEntry(HarObject):
     ]
 
     def __init__(self, obj=None):
-        har = obj
+        har = obj or None
 
-        started = self.get_started_datetime(obj)
-        timings = self.get_timings(obj)
-        connref = self.get_connection(obj)
-
-        if isinstance(obj, (bytes, str, unicode, list, tuple)):
+        if isinstance(obj, collections.Mapping):
+            har = obj
+        elif isinstance(obj, HarObject):
+            har = obj.to_json()
+        elif isinstance(obj, (bytes, str, unicode, list, tuple)):
             raise ValueError('HarEntry got %s' % repr(obj))
+        else:
+            har = self.decode(obj)
 
-        if isinstance(obj, HarObject):
-            har = obj.toJSON()
-            har['_socketOptions'] = map(lambda x: x.toJSON(), obj._socketOptions)
-
-        if isinstance(obj, urllib.addinfourl):
-            har = dict()
-            har['startedDateTime'] = started
-            har['time'] = -1
-            har['request'] = obj
-            har['response'] = obj
-            har['cache'] = {}
-            har['timings'] = timings
-            har['connection'] = connref
-
-        if isinstance(obj, httplib.HTTPResponse):
-            har = dict()
-            har['startedDateTime'] = started
-            har['time'] = -1
-            har['request'] = obj
-            har['response'] = obj
-            har['cache'] = {}
-            har['timings'] = timings
-            har['connection'] = connref
-            har['_clientOptions'] = dict()
-            har['_clientOptions']['autoClose'] = obj.will_close
-            har['_clientOptions']['chunked'] = obj.chunked
-            har['_clientOptions']['failOnError'] = obj.strict
-            har['_clientOptions']['verbosity'] = obj.debuglevel
-
-        if isinstance(obj, urllib2.Request):
-            har = dict()
-            har['startedDateTime'] = started
-            har['time'] = -1
-            har['request'] = obj
-            har['response'] = obj
-            har['cache'] = {}
-            har['timings'] = timings
-            har['connection'] = connref
-            har['_clientOptions'] = dict()
-            har['_clientOptions']['host'] = obj.origin_req_host
-            har['_clientOptions']['unverifiable'] = obj.unverifiable
-
-        if isinstance(obj, urllib3.HTTPResponse):
-            #har = dict(
-            #    startedDateTime = started,
-            #    time = -1,
-            #    request = obj,
-            #    response = obj,
-            #    cache = {},
-            #    timings = timings,
-            #    connection = self.get_connection(obj),
-            #)
-            #har['_clientOptions'] = dict(
-            #    decodeContent = obj.decode_content,
-            #)
-            pass
-
-        if isinstance(obj, requests.Response):
-            har = dict()
-            har['startedDateTime'] = started
-            har['time'] = obj.elapsed.total_seconds()*1000.0
-            har['request'] = obj.request
-            har['response'] = obj
-            har['cache'] = {}
-            har['timings'] = timings
-            har['connection'] = self.get_connection(obj)
-            har['_clientOptions'] = dict()
-            har['_clientOptions']['charset'] = obj.encoding
-            har['_clientOptions']['decodeContent'] = obj.raw.decode_content
-            #har['_clientOptions']['contentRead'] = obj.raw._fp_bytes_read
+        if isinstance(har, collections.Mapping):
+            if not har.has_key('startedDateTime'):
+                har['startedDateTime'] = None
+            if not har['startedDateTime']:
+                har['startedDateTime'] = self.get_started_datetime(obj)
 
         super(HarEntry, self).__init__(har)
 
-    def get_connection(self, obj):
-        from datetime import datetime
-        now = datetime.now()
-        return now.strftime('%s')
-
     def get_started_datetime(self, obj):
         from datetime import datetime
-        now = datetime.utcnow()
-        if isinstance(obj, requests.Response):
-            return (now - obj.elapsed).isoformat() + 'Z'
-        return now.isoformat() + 'Z'
+        return datetime.utcnow().isoformat() + 'Z'
 
-    def get_timings(self, obj):
-        har = obj
-        if isinstance(obj, httplib.HTTPResponse):
-            har = dict(
-                connect = -1,
-                dns = -1,
-                receive = -1,
-                send = -1,
-                ssl = -1,
-                wait = -1,
-                _total = -1
-            )
-        if isinstance(obj, requests.Response):
-            total = obj.elapsed.total_seconds()*1000.0
-            har = dict(
-                connect = -1,
-                dns = -1,
-                receive = -1,
-                send = -1,
-                ssl = -1,
-                wait = total,
-                _total = total
-            )
-        return har
+    #def get_connection(self, obj):
+    #    from datetime import datetime
+    #    now = datetime.now()
+    #    return now.strftime('%s')
+    #
+    #def get_timings(self, obj):
+    #    har = obj
+    #    if isinstance(obj, http_client.HTTPResponse):
+    #        har = dict(
+    #            connect = -1,
+    #            dns = -1,
+    #            receive = -1,
+    #            send = -1,
+    #            ssl = -1,
+    #            wait = -1,
+    #            _total = -1
+    #        )
+    #    if isinstance(obj, requests.Response):
+    #        total = obj.elapsed.total_seconds()*1000.0
+    #        har = dict(
+    #            connect = -1,
+    #            dns = -1,
+    #            receive = -1,
+    #            send = -1,
+    #            ssl = -1,
+    #            wait = total,
+    #            _total = total
+    #        )
+    #    return har
 
-    def to_httplib(self):
-        resp = self.response.to_httplib()
-        resp._method = self.request.method
-        resp.strict = self._clientOptions.failOnError
-        resp.debuglevel = self._clientOptions.verbosity
-        resp.chunked = 1 if self._clientOptions.chunked else 0
-        resp.will_close = 1 if self._clientOptions.autoClose else 0
+    #def to_httplib(self):
 
-        return resp
+    ## urllib2 lacks a decent Response class
+    #def to_urllib2(self):
+    #    return self.encode(urllib.request.Request)
+    #
+    #def to_urllib3(self):
+    #    return self.encode(urllib3r.HTTPResponse)
+    #
+    #def to_requests(self):
+    #    return self.encode(requests.Response)
 
-    # urllib2 lacks a decent Response class
-    def to_urllib2(self):
-        req = self.request.to_urllib2()
-        req.origin_req_host = self._clientOptions.host
-        req.unverifiable = self._clientOptions.unverifiable
-
-        return req
-
-    def to_urllib3(self):
-        resp = self.response.to_urllib3()
-        resp.strict = self._clientOptions.failOnError
-        resp.decode_content = self._clientOptions.decodeContent
-        resp.original_response = self.to_httplib()
-        #resp._fp_bytes_read = self._clientOptions.contentRead
-        #resp.connection = None
-        #resp.pool = None
-
-        return resp
-
-    def to_requests(self):
-        from datetime import timedelta
-        resp = self.response.to_requests()
-        resp.elapsed = timedelta(0, float(self.time)/1000.0)
-        resp.encoding = self._clientOptions.charset
-        resp.raw = self.to_urllib3()
-
-        return resp
+    def to_json(self, with_content=True):
+        d = super(HarEntry, self).to_json()
+        if not with_content:
+            try:
+                del d['request']['postData']['text']
+                del d['request']['postData']['encoding']
+                del entry.request.postData.encoding
+            except: pass
+            try:
+                del d['response']['content']['text']
+                del d['response']['content']['encoding']
+            except: pass
+        return d
 
 class HarLog(HarObject):
 
@@ -406,10 +322,10 @@ class HarLog(HarObject):
             har.append(resp)
 
         elif isinstance(obj, HarEntry):
-            har = [obj.toJSON()]
+            har = [obj.to_json()]
 
         elif isinstance(obj, HarLog):
-            har = [entry.toJSON() for entry in obj.entries]
+            har = [entry.to_json() for entry in obj.entries]
 
         elif not obj:
             return []

@@ -8,20 +8,11 @@
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
-
 import collections
 import json
-import requests
 import six
-
 from six.moves import http_client as httplib
 from six.moves import http_cookiejar
-
-try:
-    import urllib3
-except ImportError:
-    from requests.packages import urllib3
-
 from .metamodel import HarObject
 
 class HarNameValuePair(HarObject):
@@ -34,50 +25,6 @@ class HarNameValuePair(HarObject):
     _optional = {
         'comment': '',
     }
-
-    @staticmethod
-    def from_pair(item):
-        if '=' not in item:
-            item += '='
-            #raise ValueError(repr(item), 'must be of the form A = B')
-        if '&' in item:
-            raise ValueError(repr(item), 'must split on "&" first')
-        name, value = item.split('=')
-        return {'name': name, 'value': value}
-
-    @staticmethod
-    def pair2dict(pair):
-        return {'name': pair[0], 'value': pair[1]}
-
-    @staticmethod
-    def dict2pair(data):
-        return data['name'], data['value']
-
-    @staticmethod
-    def decode_query(o):
-        har = []
-        if isinstance(o, basestring):
-            query = urllib3.util.parse_url(o).query
-            if query is None: return []
-            pairs = query.split('&')
-            pairs = filter(lambda it: it != '', pairs)
-            har = map(HarNameValuePair.from_pair, pairs)
-        return har
-
-    @staticmethod
-    def encode_query(d):
-        har = ''
-        if isinstance(d, dict):
-            d = d.items()
-        if isinstance(d, list):
-            if isinstance(d[0], dict):
-                d = map(lambda p: (p['name'], p['value']), d)
-            for name, value in d:
-                har += '&' + str(name) + '=' + str(value)
-        if har != '':
-            return har[1:]
-        else:
-            return ''
 
 class HarCookie(HarNameValuePair):
 
@@ -117,27 +64,14 @@ class HarCookie(HarNameValuePair):
         har = obj
 
         if isinstance(obj, HarCookie):
-            har = obj.toJSON()
-
-        if isinstance(obj, tuple):
-            har = dict()
-            har['name'] = obj[0]
-            har['value'] = obj[1]
-
-        if isinstance(obj, http_cookiejar.Cookie):
-            har = dict()
-            har['name'] = obj.name
-            har['value'] = obj.value
-            har['path'] = obj.path
-            har['domain'] = obj.domain
-            har['expires'] = obj.expires
-            har['httpOnly'] = False
-            har['secure'] = obj.secure
+            har = obj.to_json()
+        elif isinstance(obj, (tuple, list)):
+            har = self.decode(tuple(obj))
 
         super(HarCookie, self).__init__(har)
 
     def to_requests(self):
-        return (self.name, self.value)
+        return self.encode(tuple)
 
 class HarHeader(HarNameValuePair):
 
@@ -149,12 +83,9 @@ class HarHeader(HarNameValuePair):
         har = obj
 
         if isinstance(obj, HarHeader):
-            har = obj.toJSON()
-
-        if isinstance(obj, (tuple, list)):
-            har = dict()
-            har['name'] = obj[0]
-            har['value'] = obj[1]
+            har = obj.to_json()
+        elif isinstance(obj, (tuple, list)):
+            har = self.decode(tuple(obj))
 
         if self.use_titlecase:
             har['name'] = har['name'].title()
@@ -162,7 +93,7 @@ class HarHeader(HarNameValuePair):
         super(HarHeader, self).__init__(har)
 
     def to_requests(self):
-        return (self.name, self.value)
+        return self.encode(tuple)
 
 class HarMessageBody(HarObject):
     pass
@@ -188,57 +119,64 @@ class HarMessage(HarObject):
         'bodySize': int,
     }
 
-    def to_version(self, v):
-        v_num = float(v.split('/', 1)[1])
-        return int(v_num*10.0)
-        
-    def get_version(self, obj):
-        v = 'HTTP/1.1'
-        if isinstance(obj, (httplib.HTTPResponse, urllib3.response.HTTPResponse)):
-            v_str = str(float(obj.version)/10.0)
-            v = 'HTTP/%s' % v_str
-        if isinstance(obj, requests.Response):
-            v_str = str(float(obj.raw.version)/10.0)
-            v = 'HTTP/%s' % v_str
-        return v
+    #def to_version(self, v):
+    #    v_num = float(v.split('/', 1)[1])
+    #    return int(v_num*10.0)
+    #    
+    #def get_version(self, obj):
+    #    v = 'HTTP/1.1'
+    #    if isinstance(obj, (httplib.HTTPResponse, urllib3.response.HTTPResponse)):
+    #        v_str = str(float(obj.version)/10.0)
+    #        v = 'HTTP/%s' % v_str
+    #    if isinstance(obj, requests.Response):
+    #        v_str = str(float(obj.raw.version)/10.0)
+    #        v = 'HTTP/%s' % v_str
+    #    return v
 
-    def get_cookies(self, obj):
-        cookies = []
-        cookiejar = None
-        if isinstance(obj, httplib.HTTPResponse):
-            obj = obj.msg
-        if isinstance(obj, httplib.HTTPMessage):
-            cookies = []
-        if isinstance(obj, requests.PreparedRequest):
-            cookies = obj._cookies
-        if isinstance(obj, requests.Request):
-            cookies = obj.cookies
-        if isinstance(obj, requests.Response):
-            cookies = obj.cookies
-        if isinstance(cookies, dict):
-            cookies = cookies.items()
-        return cookies
-
-    def get_headers(self, obj):
-        '''
-        Takes any object and returns the associated list of header pairs.
-        '''
-        headers = []
-        if isinstance(obj, httplib.HTTPResponse):
-            obj = obj.msg
-        if isinstance(obj, httplib.HTTPMessage):
-            headers = map(lambda x: x.strip().split(': ', 1), obj.headers)
-        if isinstance(obj, requests.Request):
-            headers = obj.headers.items()
-        if isinstance(obj, requests.PreparedRequest):
-            headers = obj.headers.lower_items()
-        if isinstance(obj, requests.Response):
-            headers = obj.headers.lower_items()
-        if isinstance(obj, dict):
-            headers = obj.items()
-        if isinstance(obj, list):
-            headers = obj
-        return headers
+    #def get_cookies(self, obj):
+    #    cookies = []
+    #    cookiejar = None
+    #    if isinstance(obj, httplib.HTTPResponse):
+    #        obj = obj.msg
+    #    if isinstance(obj, httplib.HTTPMessage):
+    #        cookies = []
+    #    if isinstance(obj, requests.PreparedRequest):
+    #        cookies = obj._cookies
+    #    if isinstance(obj, requests.Request):
+    #        cookies = obj.cookies
+    #    if isinstance(obj, requests.Response):
+    #        cookies = obj.cookies
+    #    if isinstance(obj, collections.Mapping):
+    #        cookies = obj
+    #    if isinstance(cookies, collections.Mapping):
+    #        cookies = cookies.items()
+    #    #if isinstance(cookies, six.string_types):
+    #    #    cookies = map(lambda x: x.split('=', 1), cookies.split(';'))
+    #    return cookies
+    #
+    #def get_headers(self, obj):
+    #    '''
+    #    Takes any object and returns the associated list of header pairs.
+    #    '''
+    #    headers = []
+    #    if isinstance(obj, django.http.response.HttpResponse):
+    #        headers = obj._headers.items()
+    #    if isinstance(obj, httplib.HTTPResponse):
+    #        obj = obj.msg
+    #    if isinstance(obj, httplib.HTTPMessage):
+    #        headers = map(lambda x: x.strip().split(': ', 1), obj.headers)
+    #
+    #    if isinstance(obj, requests.Request):
+    #        headers = obj.headers.items()
+    #    if isinstance(obj, requests.PreparedRequest):
+    #        headers = obj.headers.lower_items()
+    #    if isinstance(obj, requests.Response):
+    #        headers = obj.headers.lower_items()
+    #    if isinstance(obj, collections.Mapping):
+    #        headers = obj.items()
+    #    if isinstance(obj, list):
+    #        headers = obj
+    #    return headers
 
     def get_cookie(self, name, default=None):
         for cookie in self.cookies:
@@ -272,53 +210,21 @@ class HarPostDataParam(HarNameValuePair): # <params>
         '_headers': [],
     }
 
+    _types = {
+        '_headers': [HarHeader],
+    }
+
     def __init__(self, obj=None):
         har = obj
 
-        if isinstance(obj, HarObject):
-            har = obj.toJSON()
-
-        if isinstance(obj, (tuple, list)):
-            har = self.parse_param(obj[1], obj[0])
+        if isinstance(obj, collections.Mapping):
+            har = obj
+        elif isinstance(obj, HarObject):
+            har = obj.to_json()
+        else:
+            har = self.decode(obj)
 
         super(HarPostDataParam, self).__init__(har)
-
-    @staticmethod
-    def parse_param(obj, name=None):
-        d = dict()
-        if name:
-            d['name'] = name
-        else:
-            d['name'] = obj[0]
-            obj = obj[1:]
-
-        if isinstance(obj, urllib3.fields.RequestField):
-            d['value'] = obj.data
-            d['fileName'] = obj._filename
-            d['contentType'] = obj.headers.get('content-type')
-            if hasattr(obj, 'headers'):
-                if isinstance(obj.headers, dict):
-                    d['_headers'] = map(HarHeader, obj.headers.items())
-        elif isinstance(obj, tuple):
-            if len(obj) == 1:
-                d['value'] = obj[0]
-            elif len(obj) == 2:
-                d['value'] = obj[1]
-                d['fileName'] = obj[0]
-            elif len(obj) == 3:
-                d['value'] = obj[1]
-                d['fileName'] = obj[0]
-                d['contentType'] = obj[2]
-            elif len(obj) == 4:
-                d['value'] = obj[1]
-                d['fileName'] = obj[0]
-                d['contentType'] = obj[2]
-                if hasattr(obj[3], 'items'):
-                    d['_headers'] = map(HarHeader, obj[3].items())
-        else:
-            d['value'] = obj
-
-        return d
 
 class HarQueryStringParam(HarNameValuePair):
     pass

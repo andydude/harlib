@@ -23,7 +23,7 @@ class HarObject(MetaObject):
     def __init__(self, obj=None):
         super(HarObject, self).__init__(obj)
         self._ordered = self._ordered or self._required
-        self._reserved += ['_ordered']
+        self._reserved += ['_ordered', '_codecs']
 
     def items(self):
         def key(item):
@@ -42,3 +42,56 @@ class HarObject(MetaObject):
 
     def to_json(self, dict_class=collections.OrderedDict):
         return super(HarObject, self).to_json(dict_class=dict_class)
+
+    def decode(self, raw):
+        mod = raw.__class__.__module__
+        for codec in self._codecs:
+            if mod in codec.modules:
+                har = codec.decode(raw, self.__class__)
+                return har
+        raise ValueError("%s could not be decoded" % raw.__class__)
+
+    def encode(self, raw_class):
+        mod = raw_class.__module__
+        for codec in self._codecs:
+            if mod in codec.modules:
+                raw = codec.encode(self, raw_class)
+                return raw
+        raise ValueError("%s could not be encoded" % raw_class)
+
+def initialize_codecs():
+    if hasattr(HarObject, '_codecs'):
+        return
+
+    HarObject._codecs = []
+
+    try:
+        import harlib.codecs.django
+        HarObject._codecs.append(harlib.codecs.django.DjangoCodec())
+    except:
+        print("no django")
+
+    try:
+        import harlib.codecs.httplib
+        HarObject._codecs.append(harlib.codecs.httplib.Urllib2Codec())
+        HarObject._codecs.append(harlib.codecs.httplib.HttplibCodec())
+    except:
+        print("no httplib")
+        pass
+
+    try:
+        import harlib.codecs.requests
+        HarObject._codecs.append(harlib.codecs.requests.Urllib3Codec())
+        HarObject._codecs.append(harlib.codecs.requests.RequestsCodec())
+    except:
+        print("no requests")
+        pass
+
+    try:
+        import harlib.codecs.default
+        HarObject._codecs.append(harlib.codecs.default.DefaultCodec())
+    except:
+        print("no default")
+        pass
+
+initialize_codecs()

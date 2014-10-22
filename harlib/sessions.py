@@ -22,6 +22,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+class HarSocketManager(object):
+
+    def __init__(self, session):
+        pass
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
+        pass
+
 class HarSessionMixin(object):
 
     def __init__(self, filename=None):
@@ -156,6 +167,3 @@ class HarSession(HarSessionMixin, requests.Session):
     def __init__(self, filename=None):
         requests.Session.__init__(self)
         HarSessionMixin.__init__(self, filename)
-
-# compatibility
-HARSession = HarSession

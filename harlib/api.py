@@ -22,7 +22,7 @@ def dumps(o):
 
 def dumpd(o):
     assert(isinstance(o, HarObject))
-    return o.toJSON()
+    return o.to_json()
 
 def loadd(d):
     assert(isinstance(d, collections.Mapping))

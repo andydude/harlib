@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>HarLib Viewer</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="/static/harlib_viewer/css/vendor/bootstrap-3.2.0.min.css">
+        <link rel="stylesheet" href="/static/harlib_viewer/css/vendor/bootstrap-theme-3.2.0.min.css">
+        <link rel="stylesheet" href="/static/harlib_viewer/css/main.css">
+
+        <script src="/static/harlib_viewer/js/vendor/modernizr-2.6.2.min.js"></script>
+        <script src="/static/harlib_viewer/js/vendor/jquery-2.1.1.min.js"></script>
+        <script src="/static/harlib_viewer/js/vendor/bootstrap-3.2.0.min.js"></script>
+        <script src="/static/harlib_viewer/js/vendor/handlebars-v2.0.0.js"></script>
+
+        <script id="entry-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <tr>
+                <td><samp>{{request.method}}</samp></td>
+                <td><a onclick="onClickHarEntry(this)" data-index="{{_index}}">{{request.url}}</a></td>
+            </tr>
+        </script>
+
+        <script id="entries-list-template" type="text/x-handlebars-template">
+            {{!-- function( log ) --}}
+            <table class="table table-striped table-bordered">
+                <tbody>
+                    {{{entries entries}}}
+                </tbody>
+            </table>
+        </script>
+
+        <script id="headers-template" type="text/x-handlebars-template">
+            {{!-- function( list of headers ) --}}
+            {{#if this.length}}
+            <dl class="dl-horizontal">
+                {{#list this}}
+                <dt><samp>{{name}}</samp></dt>
+                <dd><samp>{{value}}</samp></dd>
+                {{/list}}
+            </dl>
+            {{/if}}
+        </script>
+
+        <script id="headers-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <br/>
+            <dl class="dl-horizontal dl-headers">
+                <dt><i>Request Line</i></dt>
+                <dd><samp>{{request.method}} {{request.url}}</samp></dd>
+                <dt><i>Status Line</i></dt>
+                <dd><samp>{{response.status}} {{response.statusText}}</samp></dd>
+                <dt><i>Client Version</i></dt>
+                <dd><samp>{{request.httpVersion}}</samp></dd>
+                <dt><i>Server Version</i></dt>
+                <dd><samp>{{response.httpVersion}}</samp></dd>
+            </dl>
+            <hr/>
+            <h4 class="text-primary">Request Headers</h4>
+            {{{headers request.headers}}}
+            <hr/>
+            <h4 class="text-primary">Response Headers</h4>
+            {{{headers response.headers}}}
+        </script>
+
+        <script id="cookies-template" type="text/x-handlebars-template">
+            {{!-- function( list of cookies ) --}}
+            {{#if this.length}}
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th><i>Name</i></th>
+                        <th><i>Value</i></th>
+                        <th><samp>Domain</samp></th>
+                        <th><samp>Path</samp></th>
+                        <th><samp>Expires</samp></th>
+                        <th><samp>Max-Age</samp></th>
+                        <th><samp>HttpOnly</samp></th>
+                        <th><samp>Secure</samp></th>
+                        <th><samp>Comment</samp></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#list this}}
+                    <tr>
+                        <td><pre>{{name}}</pre></td>
+                        <td><pre>{{value}}</pre></td>
+                        <td><samp>{{domain}}</samp></td>
+                        <td><samp>{{path}}</samp></td>
+                        <td><samp>{{maxAge}}</samp></td>
+                        <td><samp>{{expires}}</samp></td>
+                        <td><samp>{{httpOnly}}</samp></td>
+                        <td><samp>{{secure}}</samp></td>
+                        <td><samp>{{comment}}</samp></td>
+                    </tr>
+                    {{/list}}
+                </tbody>
+            </table>
+            {{/if}}
+        </script>
+
+        <script id="cookies-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <br/>
+            <h4 class="text-primary">Request Cookies</h4>
+            {{{cookies request.cookies}}}
+            <h4 class="text-primary">Response Cookies</h4>
+            {{{cookies response.cookies}}}
+        </script>
+
+        <script id="params-template" type="text/x-handlebars-template">
+            {{!-- function( list of params ) --}}
+            <dl class="dl-horizontal dl-params">
+                {{#list this}}
+                <dt><samp>{{name}}</samp></dt>
+                <dd><pre>{{value}}</pre></dd>
+                {{/list}}
+            </dl>
+        </script>
+
+        <script id="params-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <br/>
+            {{{params request.queryString}}}
+        </script>
+
+        <script id="postdata-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <br/>
+            {{{params request.postData.params}}}
+        </script>
+
+        <script id="request-tab-template" type="text/x-handlebars-template">
+            <pre style="height: 625px; overflow: scroll;">{{request.postData.text}}</pre>
+        </script>
+
+        <script id="response-tab-template" type="text/x-handlebars-template">
+            <pre style="height: 625px; overflow: scroll;">{{response.content.text}}</pre>
+        </script>
+
+        <script id="timings-template" type="text/x-handlebars-template">
+            {{!-- function( object of timings ) --}}
+            <dl class="dl-horizontal dl-timings">
+                {{#times this}}
+                <dt><samp>{{name}}</samp></dt>
+                <dd><samp>{{value}}</samp></dd>
+                {{/times}}
+            </dl>
+        </script>
+
+        <script id="timings-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <h4 class="text-primary">Timings</h4>
+            {{{timings timings}}}
+            <h4 class="text-primary">Timeouts</h4>
+            {{{timings _timeouts}}}
+        </script>
+
+        <script id="socket-options-template" type="text/x-handlebars-template">
+            {{!-- function( list of sockopts ) --}}
+            <dl class="dl-horizontal dl-socket-options">
+                {{#list this}}
+                <dt><samp>{{level}}/{{name}}</samp></dt>
+                <dd><samp>{{value}}</samp></dd>
+                {{/list}}
+            </dl>
+        </script>
+
+        <script id="options-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <h4 class="text-primary">Socket Options</h4>
+            {{{sockopts _socketOptions}}}
+        </script>
+
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#"><b>HarLib Viewer</b></a>
+                </div>
+
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav" role="tablist">
+                        <li id="remote-input-tab" class="active"><a href="#remote-input" role="tab" data-toggle="tab">Remote</a></li>
+                        <li id="local-input-tab"><a href="#local-input" role="tab" data-toggle="tab">Local</a></li>
+                        <li id="direct-input-tab"><a href="#direct-input" role="tab" data-toggle="tab">Direct</a></li>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div>
+        </nav>
+
+        <div class="tab-content">
+            <div class="tab-pane active" id="remote-input">
+                <form class="form-horizontal container" role="form">
+                    <div class="form-group">
+                        <label for="inputEmail3" class="col-sm-2 control-label">Remote location</label>
+                        <div class="col-sm-10">
+	                        <div class="input-group">
+		                        <input id="remote-file-name" type="text" class="form-control" placeholder="Remote location"/>
+                                <a id="remote-file-btn" class="btn btn-sm btn-default input-group-addon">
+                                    Open <i class="glyphicon glyphicon-open"></i>
+                                </a>
+	                        </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane" id="local-input">
+                <form class="form-horizontal container" role="form">
+                    <div class="form-group">
+                        <label for="inputEmail3" class="col-sm-2 control-label">Local filename</label>
+                        <div class="col-sm-10">
+	                        <div class="input-group">
+		                        <input id="local-file" name="local-file" type="file" class="form-control" placeholder="Local filename"/>
+                                <a id="local-file-btn" onclick="onClickLocalOpen(this, event)" class="btn btn-md btn-default input-group-addon">
+                                    Open <i class="glyphicon glyphicon-open"></i>
+                                </a>
+	                        </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane" id="direct-input">
+                <form class="form-horizontal container" role="form">
+                    <div class="form-group">
+                        <label for="inputEmail3" class="col-sm-2 control-label">Direct input</label>
+                        <div class="col-sm-8">
+                            <textarea id="direct-input-data" name="direct-input-data" class="form-control" rows="3" placeholder="Direct input"></textarea>
+                        </div>
+                        <div class="col-sm-2">
+                            <a id="direct-input-btn" onclick="onClickDirectOpen(this, event)" class="btn btn-md btn-default pull-left">
+                                Open <i class="glyphicon glyphicon-open"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-xs-12">
+            <div class="panel panel-default" style="height: 770px;">
+                <div class="panel-heading">
+                    <h1 class="panel-title">Viewer</h1>
+                </div>
+                <div class="panel-body">
+                    <div class="col-xs-4" style="padding: 0px;">
+                        <div class="panel panel-default side-panel" style="margin-bottom: 0px; height: 700px;">
+                            <div class="panel-body">
+                                <div id="entries" style="height: 670px; overflow: scroll;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-8" style="padding-right: 0px;">
+                        <div class="panel panel-default main-panel" style="margin-bottom: 0px; height: 700px;">
+                            <div class="panel-body">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li id="headers-tab" class="active"><a href="#headers" role="tab" data-toggle="tab">Headers</a></li>
+                                    <li id="cookies-tab"><a href="#cookies" role="tab" data-toggle="tab">Cookies</a></li>
+                                    <li id="params-tab"><a href="#params" role="tab" data-toggle="tab">Params</a></li>
+                                    <li id="postData-tab"><a href="#postData" role="tab" data-toggle="tab">PostData</a></li>
+                                    <li id="response-tab"><a href="#response" role="tab" data-toggle="tab">Response</a></li>
+                                    <!--li id="preview-tab"><a href="#preview" role="tab" data-toggle="tab">Preview</a></li-->
+                                    <li id="timing-tab"><a href="#timing" role="tab" data-toggle="tab">Timing</a></li>
+                                    <li id="options-tab" class="hidden"><a href="#options" role="tab" data-toggle="tab">Options</a></li>
+                                </ul>
+                                <div class="tab-content">
+                                    <div class="tab-pane active" style="height: 635px; overflow: scroll;" id="headers"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="cookies"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="params"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="postData"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="response"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="preview"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="timing"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="options"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/static/harlib_viewer/js/main.js"></script>
+    </body>
+</html>
