@@ -8,6 +8,7 @@
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 '''
+harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
 import collections
@@ -313,14 +314,6 @@ class HarLog(HarObject):
             for entry in entries:
                 har.extend(self.parse_entries(entry))
 
-        elif isinstance(obj, requests.Response):
-            har = []
-            resp = obj
-            if hasattr(resp, 'history') and resp.history and len(resp.history) > 0:
-                for tome in resp.history:
-                    har.append(tome)
-            har.append(resp)
-
         elif isinstance(obj, HarEntry):
             har = [obj.to_json()]
 
@@ -331,7 +324,7 @@ class HarLog(HarObject):
             return []
 
         else:
-            raise ValueError('HarLog got %s' % repr(obj))
+            har = self.decode(obj)
 
         return har
 

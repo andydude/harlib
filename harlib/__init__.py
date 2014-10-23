@@ -33,7 +33,12 @@ if __name__ == '__main__':
     print("url:", __homepage_url__)
 
 else:
-    from .objects import *
+    # only import after installing six
+    try:
+        import six
+        from .objects import *
+    except ImportError:
+        pass
 
     # only import HarSession if requests is installed
     try:
