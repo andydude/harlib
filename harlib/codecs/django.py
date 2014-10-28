@@ -9,6 +9,7 @@
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 
+import wsgiref.handlers
 import django.http.request
 import django.http.response
 import harlib
@@ -72,7 +73,7 @@ class DjangoCodec(object):
         return har
 
     def decode_HarResponse_from_HttpResponse(self, raw):
-        version = os.environ.get('SERVER_PROTOCOL', 'HTTP/1.1')
+        version = 'HTTP/%s' % wsgiref.handlers.BaseHandler.http_version
         har = self.dict_class()
         har['status'] = raw.status_code
         har['statusText'] = raw.reason_phrase
@@ -86,7 +87,8 @@ class DjangoCodec(object):
         return har
 
     def decode_HarCookies_from_HttpRequest(self, raw):
-        return raw._get_cookies().items()
+        #return raw._get_cookies().items()
+        return raw.COOKIES.items()
 
     def decode_HarHeaders_from_HttpRequest(self, raw):
         headers = []

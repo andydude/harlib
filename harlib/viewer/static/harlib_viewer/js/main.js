@@ -141,7 +141,15 @@ $(function(){
     };
 
     window.onInputHarFile = function (file) {
-        $('#entries')	.html(entriesListTemplate(file.log));
+        var log = file.log;
+        if (!log) {
+            if (file.startedDateTime) {
+                window.gHarFile = {};
+                window.gHarFile.log = {"version": "1.2", "entries": [file]};
+                log = window.gHarFile.log
+            }
+        }
+        $('#entries')	.html(entriesListTemplate(log));
 
         var $list = $('#entries > table > tbody > tr');
         var tag = $list[0].children[1].children[0];
