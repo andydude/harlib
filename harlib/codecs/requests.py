@@ -129,6 +129,7 @@ class RequestsCodec(object):
         har_type = har.__class__.__name__
         return getattr(self, 'encode_%s_to_%s' % (har_type, raw_type))(har)
 
+
     def encode_HarEntry_to_Response(self, har):
         from datetime import timedelta
         resp = self.encode_HarResponse_to_Response(har.response)
@@ -209,6 +210,14 @@ class RequestsCodec(object):
         method_name = 'decode_%s_from_%s' % (har_class.__name__, raw.__class__.__name__)
         method = getattr(self, method_name)
         return method(raw)
+
+    def decode_HarLog_from_Response(self, raw):
+        har = []
+        if hasattr(raw, 'history') and raw.history and len(raw.history) > 0:
+            for tome in raw.history:
+                har.append(tome)
+        har.append(raw)
+        return har
 
     def decode_HarEntry_from_Response(self, raw):
         from datetime import datetime
