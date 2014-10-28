@@ -144,7 +144,9 @@ $(function(){
         var log = file.log;
         if (!log) {
             if (file.startedDateTime) {
-                log = {"version": "1.2", "entries": [file]};
+                window.gHarFile = {};
+                window.gHarFile.log = {"version": "1.2", "entries": [file]};
+                log = window.gHarFile.log
             }
         }
         $('#entries')	.html(entriesListTemplate(log));
