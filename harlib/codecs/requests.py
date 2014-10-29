@@ -3,7 +3,7 @@
 #
 # harlib
 # Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
+#
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
@@ -21,7 +21,7 @@ class Urllib3Codec(object):
 
     dict_class = dict
     response_class = urllib3r.response.HTTPResponse
-    modules = ['urllib3', 'requests.packages.urllib3.response']
+    modules = ['urllib3.response', 'requests.packages.urllib3.response']
     httplib_codec = HttplibCodec()
 
     def __init__(self):
@@ -75,16 +75,56 @@ class Urllib3Codec(object):
         har['time'] = 0
         har['request'] = raw
         har['response'] = raw
-        har['cache'] = {}
-        har['timings'] = timings
-        har['connection'] = ''
         har['_clientOptions'] = self.dict_class()
         har['_clientOptions']['decodeContent'] = raw.decode_content
         return har
-        
-    def decode_HarResponse_from_HTTPResponse(self, raw):
-        pass
 
+    def decode_HarResponse_from_HTTPResponse(self, raw):
+        har = self.dict_class()
+        har['status'] = raw.status
+        har['statusText'] = raw.reason
+        har['httpVersion'] = harlib.utils.render_http_version(raw.version)
+
+        har['headers'] = list(raw.headers.items())
+        har['cookies'] = []
+
+        har['content'] = self.decode_HarResponseBody_from_HTTPResponse(raw)
+        har['redirectURL'] = ''
+
+        try:
+            headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
+            har['headersSize'] = len(headers + '\r\n\r\n')
+            har['bodySize'] = len(har['content']['text'])
+        except:
+            har['headersSize'] = -1
+            har['bodySize'] = -1
+        return har
+
+    def decode_HarResponseBody_from_HTTPResponse(self, raw):
+        har = self.dict_class()
+        har['mimeType'] = raw.headers.get('content-type')
+        try:
+            text = raw.data
+        except:
+            text = ''
+
+        har['text'] = text
+        har['size'] = len(text)
+        har['compression'] = -1
+        return har
+
+    def decode_HarRequest_from_HTTPResponse(self, raw):
+        har = self.dict_class()
+        har['method'] = 'UNKNOWN'
+        har['url'] = 'UNKNOWN'
+        har['headers'] = []
+        har['cookies'] = []
+        har['queryString'] = []
+        har['postData'] = {'mimeType': 'UNKNOWN'}
+        return har
+
+    def decode_HarRequestBody_from_HTTPResponse(self, raw):
+        return {'mimeType': 'UNKNOWN'}
 
     #def decode_HarPostDataParam_from_RequestField(self, raw, name=None):
     #if isinstance(obj, urllib3.fields.RequestField):
