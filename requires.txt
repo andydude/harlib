@@ -1,6 +1,5 @@
-django>=1.6
-metaobject>=0.1.1
+metaobject
 multipart>=0.1
-requests>=2.4.3
+requests
 six>=1.8.0
-urllib3>=1.9.1
+
