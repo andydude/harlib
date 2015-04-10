@@ -17,6 +17,8 @@ import six
 from six.moves import http_client
 from .httplib import HttplibCodec
 
+KEEP_SIZE = False
+
 class Urllib3Codec(object):
 
     dict_class = dict
@@ -91,13 +93,18 @@ class Urllib3Codec(object):
         har['content'] = self.decode_HarResponseBody_from_HTTPResponse(raw)
         har['redirectURL'] = ''
 
-        try:
-            headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
-            har['headersSize'] = len(headers + '\r\n\r\n')
-            har['bodySize'] = len(har['content']['text'])
-        except:
+        if KEEP_SIZE:
+            try:
+                headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
+                har['headersSize'] = len(headers + '\r\n\r\n')
+                har['bodySize'] = len(har['content']['text'])
+            except:
+                har['headersSize'] = -1
+                har['bodySize'] = -1
+        else:
             har['headersSize'] = -1
             har['bodySize'] = -1
+
         return har
 
     def decode_HarResponseBody_from_HTTPResponse(self, raw):

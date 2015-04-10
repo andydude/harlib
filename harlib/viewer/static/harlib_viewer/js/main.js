@@ -212,6 +212,11 @@ $(function(){
     };
 
     window.onClickRemoteOpen = function (tag, event) {
+        var $tag = $('#remote-file-name')[0];
+        $.get($tag.value.trim(), function( response ) {
+            window.gHarFile = response;
+            window.onInputHarFile(window.gHarFile);
+        });
     };
 
     window.onClickLocalOpen = function (tag, event) {
