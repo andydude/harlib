@@ -142,7 +142,10 @@ class HarSessionMixin(object):
             self._entries.extend(new_entries)
 
     def _update_entry(self, attr, value, index = -1):
-        setattr(self._entries[index], attr, value)
+        try:
+            setattr(self._entries[index], attr, value)
+        except Exception as err:
+            pass
 
     def request(self, method, url, **kwargs):
 
