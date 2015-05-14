@@ -49,7 +49,9 @@ class HarSessionMixin(object):
     def clear(self):
         self._entries.clear()
 
-    def dump(self, with_content=False, **kwargs):
+    def dump(self, with_content=False, logging_level=None, extra=None, **kwargs):
+        if logging_level is None:
+            logging_level = logging.DEBUG
         nentries = len(self._entries)
         if self._filename and self._entries:
             try:
@@ -66,7 +68,7 @@ class HarSessionMixin(object):
         filename = self._filename
         if VIRTUAL_ENV and filename.startswith(VIRTUAL_ENV):
             filename = '${VIRTUAL_ENV}' + filename[len(VIRTUAL_ENV):]
-        logger.debug('Dumped %d responses to %s' % (nentries, filename))
+        logger.log(logging_level, 'Dumped %d responses to %s' % (nentries, filename), extra=extra)
         return str(self._filename)
 
     def dumps(self, with_content=False, **kwargs):
