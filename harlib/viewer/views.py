@@ -11,13 +11,9 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-from django.http.response import HttpResponse
-import os.path
+from django.shortcuts import render_to_response
 
-# Create your views here.
 
 def index(request):
-    selfdir = os.path.dirname(__file__)
-    with open(selfdir + '/templates/harlib_viewer/index.html') as f:
-        d = f.read()
-    return HttpResponse(d)
+    return render_to_response('harlib_viewer/index.html', {'remote_location':
+                                                           request.GET.get('remote_location', '')})
