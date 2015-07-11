@@ -3,7 +3,7 @@
 #
 # harlib
 # Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
+#
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
@@ -52,16 +52,23 @@ class HarSessionMixin(object):
     def dump(self, with_content=False, **kwargs):
         nentries = len(self._entries)
         if self._filename and self._entries:
+
+            # make directory
             try:
                 dirname = os.path.dirname(self._filename)
                 if not os.path.exists(dirname):
                     os.makedirs(dirname)
-            except (IOError, OSError):
-                pass
+            except (IOError, OSError) as err:
+                logger.warning('%s %s' % (type(err), repr(err)))
+            except Exception as err:
+                logger.error('%s %s' % (type(err), repr(err)))
+
+            # write file
             with open(self._filename, 'w') as f:
                 har = self.to_har(with_content=with_content)
                 s = har.dumps(**kwargs)
                 f.write(s)
+
         VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV')
         filename = self._filename
         if VIRTUAL_ENV and filename.startswith(VIRTUAL_ENV):

@@ -320,7 +320,7 @@ class HarLog(HarObject):
         elif isinstance(obj, HarLog):
             har = [entry.to_json() for entry in obj.entries]
 
-        elif not obj:
+        elif obj == None:
             return []
 
         else:
