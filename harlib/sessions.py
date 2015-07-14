@@ -71,7 +71,7 @@ class HarSessionMixin(object):
 
         VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV')
         filename = self._filename
-        if VIRTUAL_ENV and filename.startswith(VIRTUAL_ENV):
+        if VIRTUAL_ENV and filename and filename.startswith(VIRTUAL_ENV):
             filename = '${VIRTUAL_ENV}' + filename[len(VIRTUAL_ENV):]
         logger.debug('Dumped %d responses to %s' % (nentries, filename))
         return str(self._filename)
