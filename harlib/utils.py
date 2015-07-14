@@ -13,6 +13,7 @@ harlib - HTTP Archive (HAR) format library
 from __future__ import absolute_import
 from collections import OrderedDict
 import multipart
+import json
 import six
 
 def render_http_version(num):
@@ -47,6 +48,13 @@ def pair_from_dict(data):
 def pair_from_obj(data):
     return (data.name, data.value)
 
+def decode_json(o, **kwargs):
+    d = o
+    if not isinstance(d, dict):
+        d = json.loads(d)
+    har = map(dict_from_pair, d.items())
+    return har
+    
 def decode_multipart(o, content_type, **kwargs):
     har = []
     if isinstance(o, basestring):

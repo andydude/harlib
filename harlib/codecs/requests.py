@@ -407,17 +407,22 @@ class RequestsCodec(object):
         har['text'] = body_text or ''
         har['_size'] = len(har['text'])
 
-        try:
-            har['params'] = harlib.utils.decode_multipart(har['text'], har['mimeType'])
-        except Exception as err:
-            #print("e1 %s %s" % (type(err), repr(err)))
+        if har['mimeType'].startswith('multipart/form-data'):
+            try:
+                har['params'] = harlib.utils.decode_multipart(har['text'], har['mimeType'])
+            except Exception as err:
+                har['params'] = []
+        elif har['mimeType'].startswith('application/x-www-form-urlencoded'):
             try:
                 query = '?' + har['text']
                 har['params'] = harlib.utils.decode_query(query)
             except Exception as err:
-                #print("e2 %s %s" % (type(err), repr(err)))
                 har['params'] = []
-
+        elif har['mimeType'].startswith('application/json'):
+            try:
+                har['params'] = harlib.utils.decode_json(har['text'])
+            except Exception as err:
+                har['params'] = []
         return har
 
     def decode_HarQueryStringParams(self, raw):

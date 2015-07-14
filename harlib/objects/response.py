@@ -124,7 +124,7 @@ class HarResponse(HarMessage):
     #    text = ''
     #
     #    if isinstance(obj, HarObject):
-    #        har = obj.toJSON()
+    #        har = obj.to_json()
     #
     #    if isinstance(obj, django.http.response.HttpResponse):
     #        har['mimeType'] = obj._headers.get('content-type')[1]
