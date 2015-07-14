@@ -407,7 +407,9 @@ class RequestsCodec(object):
         har['text'] = body_text or ''
         har['_size'] = len(har['text'])
 
-        if har['mimeType'].startswith('multipart/form-data'):
+        if not har['mimeType']:
+            har['params'] = []
+        elif har['mimeType'].startswith('multipart/form-data'):
             try:
                 har['params'] = harlib.utils.decode_multipart(har['text'], har['mimeType'])
             except Exception as err:
