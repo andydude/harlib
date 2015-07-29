@@ -9,9 +9,12 @@
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from metaobject import MetaObject
-import collections
 import json
 import logging
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +43,7 @@ class HarObject(MetaObject):
         # we want to see private attributes as well
         return self._changed_items()
 
-    def to_json(self, dict_class=collections.OrderedDict):
+    def to_json(self, dict_class=OrderedDict):
         return super(HarObject, self).to_json(dict_class=dict_class)
 
     def decode(self, raw):

@@ -9,13 +9,16 @@
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from requests.packages import urllib3 as urllib3r
-import collections
 import requests
 import urllib3
 import harlib
 import six
 from six.moves import http_client
 from .httplib import HttplibCodec
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 KEEP_SIZE = False
 
@@ -139,7 +142,7 @@ class Urllib3Codec(object):
     #    har['fileName'] = obj._filename
     #    har['contentType'] = obj.headers.get('content-type')
     #    if hasattr(obj, 'headers'):
-    #        if isinstance(obj.headers, collections.Mapping):
+    #        if isinstance(obj.headers, Mapping):
     #            har['_headers'] = map(HarHeader, obj.headers.items())
 
     #    d = dict()
@@ -198,8 +201,8 @@ class RequestsCodec(object):
         resp._content_consumed = True
         resp.status_code = har.status
         resp.reason = har.statusText
-        resp.cookies = CookiesCls(collections.OrderedDict(cookies))
-        resp.headers = HeadersCls(collections.OrderedDict(headers))
+        resp.cookies = CookiesCls(OrderedDict(cookies))
+        resp.headers = HeadersCls(OrderedDict(headers))
         resp.raw = self.urllib3_codec.encode(har, urllib3r.response.HTTPResponse)
         resp.url = har.redirectURL
         resp.history = []
@@ -238,8 +241,8 @@ class RequestsCodec(object):
         preq = RequestCls()
         preq.method = har.method
         preq.url = har.url
-        preq.headers = HeadersCls(collections.OrderedDict(headers))
-        preq._cookies = CookiesCls(collections.OrderedDict(cookies))
+        preq.headers = HeadersCls(OrderedDict(headers))
+        preq._cookies = CookiesCls(OrderedDict(cookies))
 
         if har.postData:
             preq.body = har.postData.text

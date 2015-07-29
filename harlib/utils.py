@@ -11,10 +11,14 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-from collections import OrderedDict
 import multipart
 import json
 import six
+from collections import Mapping
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 def render_http_version(num):
     '''
@@ -88,7 +92,7 @@ def encode_query(d):
     if isinstance(d, dict):
         d = d.items()
     if isinstance(d, list):
-        if isinstance(d[0], collections.Mapping):
+        if isinstance(d[0], Mapping):
             d = map(lambda p: (p['name'], p['value']), d)
         for name, value in d:
             har += '&' + str(name) + '=' + str(value)

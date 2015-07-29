@@ -262,7 +262,6 @@ class HarEntry(HarObject):
             try:
                 del d['request']['postData']['text']
                 del d['request']['postData']['encoding']
-                del entry.request.postData.encoding
             except: pass
             try:
                 del d['response']['content']['text']

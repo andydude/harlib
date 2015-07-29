@@ -12,8 +12,11 @@ import json
 import logging
 import os
 import requests
-from collections import OrderedDict
 from . import objects, utils
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 try:
     from requests.adapters import DEFAULT_STREAM
