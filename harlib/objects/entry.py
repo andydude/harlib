@@ -11,7 +11,7 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-import collections
+from collections import Mapping, Sequence
 import json
 import six
 from six.moves import (http_client, urllib)
@@ -193,7 +193,7 @@ class HarEntry(HarObject):
     def __init__(self, obj=None):
         har = obj or None
 
-        if isinstance(obj, collections.Mapping):
+        if isinstance(obj, Mapping):
             har = obj
         elif isinstance(obj, HarObject):
             har = obj.to_json()
@@ -202,7 +202,7 @@ class HarEntry(HarObject):
         else:
             har = self.decode(obj)
 
-        if isinstance(har, collections.Mapping):
+        if isinstance(har, Mapping):
             if not har.has_key('startedDateTime'):
                 har['startedDateTime'] = None
             if not har['startedDateTime']:
@@ -304,10 +304,10 @@ class HarLog(HarObject):
     def parse_entries(self, obj):
         har = None
 
-        if isinstance(obj, (dict, collections.Mapping)):
+        if isinstance(obj, (dict, Mapping)):
             har = obj['entries']
 
-        elif isinstance(obj, (list, collections.Sequence)):
+        elif isinstance(obj, (list, Sequence)):
             har = []
             entries = obj
             for entry in entries:
@@ -334,10 +334,10 @@ class HarFile(HarObject):
     def __init__(self, obj=None):
         har = None
 
-        if isinstance(obj, (dict, collections.Mapping)):
+        if isinstance(obj, (dict, Mapping)):
             har = obj
 
-        elif isinstance(obj, (list, collections.Sequence)):
+        elif isinstance(obj, (list, Sequence)):
             har = dict()
             har['log'] = obj
 
