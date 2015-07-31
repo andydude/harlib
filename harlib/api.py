@@ -26,15 +26,15 @@ def dumpd(o):
 
 def loadd(d):
     assert(isinstance(d, collections.Mapping))
-    if d.has_key('log'):
+    if 'log' in d:
         return HarFile(d)
-    elif d.has_key('entries'):
+    elif 'entries' in d:
         return HarLog(d)
-    elif d.has_key('time'):
+    elif 'time' in d:
         return HarEntry(d)
-    elif d.has_key('status') or d.has_key('statusText') or d.has_key('content'):
+    elif 'status' in d or 'statusText' in d or 'content' in d:
         return HarResponse(d)
-    elif d.has_key('method') or d.has_key('url') or d.has_key('queryString'):
+    elif 'method' in d or 'url' in d or 'queryString' in d:
         return HarRequest(d)
     else:
         raise ValueError("unrecognized HAR content", d)
