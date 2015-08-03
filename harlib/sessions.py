@@ -50,7 +50,7 @@ class HarSessionMixin(object):
         self.keep_socket_options = False
 
     def clear(self):
-        self._entries.clear()
+        self._entries = []
 
     def dump(self, with_content=False, logging_level=None, extra=None, **kwargs):
         if logging_level is None:
