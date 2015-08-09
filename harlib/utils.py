@@ -262,10 +262,14 @@ try:
             #'<%s>%s</%s>' % (key, default(value), key)).children[0].children[0].children[0]
         return tag
 
-    def xml_dumps(d):
+    def xml_dumps(d, indent=False):
         soup = bs4.BeautifulSoup('<root></root>')
         tag = xml_dump_named_tree('root', d, soup=soup)
-        s = str(list(tag.children)[0])
+        tag = list(tag.children)[0]
+        if indent:
+            s = tag.prettify(formatter='xml')
+        else:
+            s = str(tag)
         return s
 
     HAS_XML = True

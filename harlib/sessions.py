@@ -49,6 +49,15 @@ class HarSessionMixin(object):
         self.keep_server_options = False
         self.keep_socket_options = False
 
+    def from_har(self, obj):
+        if isinstance(obj, objects.HarFile):
+            self._entries.extend(obj.log.entries)
+        elif isinstance(obj, objects.HarLog):
+            self._entries.extend(obj.entries)
+        elif isinstance(obj, objects.HarEntry):
+            self._entries.append(obj)
+        return self
+
     def clear(self):
         self._entries = []
 
@@ -86,7 +95,7 @@ class HarSessionMixin(object):
         s = har.dumps(**kwargs)
         return s
 
-    def to_json(self, with_content=False, dict_class=OrderedDict):
+    def to_json(self, with_content=False, dict_class=OrderedDict, indent=None):
         '''
         Converts the HAR entries into a dictionary
         '''
@@ -127,8 +136,9 @@ class HarSessionMixin(object):
             '''
             Converts the HAR entries into an XML string
             '''
+            indent = kwargs.pop('indent', False)
             d = self.to_json(*args, **kwargs)
-            s = utils.xml_dumps(d)
+            s = utils.xml_dumps(d, indent=indent)
             return s
 
     if utils.HAS_YAML:

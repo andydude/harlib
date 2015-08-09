@@ -22,6 +22,9 @@ except ImportError:
 
 KEEP_SIZE = False
 
+def from_pair(x):
+    return x[0] + ': ' + x[1]
+
 class Urllib3Codec(object):
 
     dict_class = dict
@@ -300,7 +303,7 @@ class RequestsCodec(object):
         har['redirectURL'] = raw.url if raw.url != raw.request.url else ''
 
         try:
-            headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
+            headers = '\r\n'.join(map(from_pair, har['headers']))
             har['headersSize'] = len(headers + '\r\n\r\n')
             har['bodySize'] = len(har['content']['text'])
         except:
@@ -359,7 +362,7 @@ class RequestsCodec(object):
         har['queryString'] = self.decode_HarQueryStringParams(raw)
 
         try:
-            headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
+            headers = '\r\n'.join(map(from_pair, har['headers']))
             har['headersSize'] = len(headers + '\r\n\r\n')
             har['bodySize'] = len(har['postData']['text'])
         except:

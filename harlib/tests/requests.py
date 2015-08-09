@@ -108,8 +108,8 @@ class TestRequestsResponse(TestUtils):
         
         json_resp = json.loads(har_resp.content.text)
         #print(har_resp.content.text)
+        #self.assertEqual(json_resp["headers"]["Connection"], "close")
         self.assertEqual(json_resp["url"], "http://httpbin.org/post")
-        self.assertEqual(json_resp["headers"]["Connection"], "close")
         self.assertEqual(json_resp["headers"]["Host"], "httpbin.org")
         self.assertEqual(json_resp["headers"]["X-File"], "requests")
         self.assertEqual(json_resp["headers"]["Content-Type"], 
