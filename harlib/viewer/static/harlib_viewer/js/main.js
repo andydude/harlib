@@ -157,6 +157,14 @@ $(function(){
         return;
     };
 
+    window.onInputResponseText = function (tag) {
+        var text = tag.textContent.trim();
+        if (text[0] == '{' || text[0] == '[') {
+            var data = JSON.parse(text);
+            tag.textContent = JSON.stringify(data, null, 4);
+        }
+    }
+
     window.onInputHarEntry = function (entry) {
         $('#headers')	.html(headersTabTemplate(entry));
         $('#cookies')	.html(cookiesTabTemplate(entry));
@@ -165,6 +173,7 @@ $(function(){
         $('#response')	.html(responseTabTemplate(entry));
         $('#timing')	.html(timingsTabTemplate(entry));
         $('#options')	.html(optionsTabTemplate(entry));
+        window.onInputResponseText($('#response pre')[0]);
 
         $('.main-panel .tab-pane').each(function(index, value){
             var $value = $(value);
