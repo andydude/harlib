@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import requests
+import hashlib
 from . import objects, utils
 try:
     from collections import OrderedDict
@@ -35,6 +36,7 @@ class HarSocketManager(object):
 
     def __exit__(self):
         pass
+
 
 class HarSessionMixin(object):
 
@@ -61,7 +63,7 @@ class HarSessionMixin(object):
     def clear(self):
         self._entries = []
 
-    def dump(self, with_content=False, logging_level=None, extra=None, **kwargs):
+    def dump(self, with_content=False, logging_level=None, extra=None, cache=True, **kwargs):
         if logging_level is None:
             logging_level = logging.DEBUG
         nentries = len(self._entries)
@@ -72,16 +74,36 @@ class HarSessionMixin(object):
                 dirname = os.path.dirname(self._filename)
                 if not os.path.exists(dirname):
                     os.makedirs(dirname)
+
+                har = self.to_har(with_content=with_content)
+                har_dump = har.dumps(**kwargs)
+
+                if cache:
+                    content_hash = self.get_content_hash()
+                    cache_dir = os.path.join(dirname, '.harlib')
+                    cache_hash_file = os.path.join(cache_dir, content_hash)
+                    logger.debug('har cache file: %s' % cache_hash_file)
+                    if not os.path.exists(cache_dir):
+                        os.makedirs(cache_dir)
+                    if not os.path.exists(cache_hash_file):
+                        with open(cache_hash_file, 'w') as hf:
+                            hf.write(self._filename)
+                    else:
+                        previous_filename = open(cache_hash_file, 'r').read()
+                        if os.path.exists(previous_filename):
+                            logger.debug('found match cache file')
+                            return previous_filename
+                # write file
+                with open(self._filename, 'w') as f:
+                    f.write(har_dump)
+                if cache:
+                    with open(cache_hash_file, 'w') as cf:
+                        cf.write(self._filename)
+
             except (IOError, OSError) as err:
                 logger.warning('%s %s' % (type(err), repr(err)))
             except Exception as err:
                 logger.error('%s %s' % (type(err), repr(err)))
-
-            # write file
-            with open(self._filename, 'w') as f:
-                har = self.to_har(with_content=with_content)
-                s = har.dumps(**kwargs)
-                f.write(s)
 
         VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV')
         filename = self._filename
@@ -130,6 +152,26 @@ class HarSessionMixin(object):
             del entry.response.content.encoding
         except:
             pass
+
+    def get_content_hash(self):
+        content = ''
+        for entry in self._entries:
+            content += entry.request.method
+            content += entry.request.url
+            try:
+                content += str(entry.response.postData.text)
+            except Exception:
+                pass
+            try:
+                content += str(entry.request.headers)
+            except Exception:
+                pass
+            content += str(entry.response.status)
+            content += str(entry.response.content.encoding)
+        sha_hash = hashlib.new('sha1')
+        sha_hash.update(content)
+        sha_hash_digest = sha_hash.hexdigest()
+        return sha_hash_digest
 
     if utils.HAS_XML:
         def to_xml(self, *args, **kwargs):
