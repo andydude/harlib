@@ -89,7 +89,8 @@ class HarSessionMixin(object):
                         with open(cache_hash_file, 'w') as hf:
                             hf.write(self._filename)
                     else:
-                        previous_filename = open(cache_hash_file, 'r').read()
+                        with open(cache_hash_file, 'r') as ch:
+                            previous_filename = ch.read()
                         if os.path.exists(previous_filename):
                             logger.debug('found match cache file')
                             return previous_filename
