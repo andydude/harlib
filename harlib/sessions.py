@@ -168,7 +168,10 @@ class HarSessionMixin(object):
             except Exception:
                 pass
             content += str(entry.response.status)
-            content += str(entry.response.content.encoding)
+            try:
+                content += str(entry.response.content.encoding)
+            except AttributeError:
+                pass
         sha_hash = hashlib.new('sha1')
         sha_hash.update(content)
         sha_hash_digest = sha_hash.hexdigest()
