@@ -38,14 +38,14 @@ else:
     try:
         import six
         from .objects import *
-    except ImportError:
+    except ImportError as err:
         print(repr(err))
 
     # only import HarSession if requests is installed
     try:
         import requests
         from .sessions import HarSessionMixin, HarSession
-    except ImportError:
+    except ImportError as err:
         print(repr(err))
 
     # this might fail is any codec is not installed
