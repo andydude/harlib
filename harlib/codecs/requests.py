@@ -83,10 +83,14 @@ class Urllib3Codec(object):
         har['time'] = 0
         har['request'] = raw
         har['response'] = raw
-        har['_clientOptions'] = self.dict_class()
-        har['_clientOptions']['decodeContent'] = raw.decode_content
+        har['_clientOptions'] = self.decode_HarClientOptions_from_HTTPResponse(raw)
         return har
 
+    def decode_HarClientOptions_from_HTTPResponse(self, raw):
+        har = self.dict_class()
+        har['decodeContent'] = raw.decode_content
+        return har
+    
     def decode_HarResponse_from_HTTPResponse(self, raw):
         har = self.dict_class()
         har['status'] = raw.status
@@ -284,12 +288,30 @@ class RequestsCodec(object):
         har['cache'] = {}
         har['timings'] = self.decode_HarTimings_from_Response(raw)
         har['connection'] = ''
-        har['_clientOptions'] = self.dict_class()
-        har['_clientOptions']['charset'] = raw.encoding
-        har['_clientOptions']['decodeContent'] = raw.raw.decode_content
-        #har['_clientOptions']['contentRead'] = raw.raw._fp_bytes_read
+        har['_clientOptions'] = self.decode_HarClientOptions_from_Response(raw)
         return har
 
+    def decode_HarClientOptions_from_Response(self, raw):
+        har = self.dict_class()
+        har['charset'] = raw.encoding
+        har['decodeContent'] = raw.raw.decode_content
+        #har['contentRead'] = raw.raw._fp_bytes_read
+        return har
+    
+    def decode_HarClientOptions_from_Session(self, raw):
+        har = self.dict_class()
+        proxies = self.dict_class()
+        try:
+            proxies['http'] = raw.adapters['http://'].proxy_manager.keys()[0]
+        except:
+            pass
+        try:
+            proxies['https'] = raw.adapters['https://'].proxy_manager.keys()[0]
+        except:
+            pass
+        har['proxies'] = proxies
+        return har
+    
     def decode_HarResponse_from_Response(self, raw):
         har = self.dict_class()
         har['status'] = raw.status_code

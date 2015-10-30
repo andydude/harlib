@@ -13,6 +13,7 @@ import logging
 import os
 import requests
 import hashlib
+from harlib.codecs.requests import RequestsCodec
 from . import objects, utils
 try:
     from collections import OrderedDict
@@ -196,12 +197,14 @@ class HarSessionMixin(object):
     def _keep_entries(self, resp):
         if self._filename is not None:
             new_entries = objects.HarLog(resp).entries
-            if not self.keep_content:
-                for entry in new_entries:
+            for entry in new_entries:
+                if not self.keep_content:
                     self._delete_content(entry)
-            if self.keep_socket_options and len(self._kept_sockopts) > 0:
-                for entry in new_entries:
+                if self.keep_socket_options and len(self._kept_sockopts) > 0:
                     entry._socketOptions = map(objects.HarSocketOption, self._kept_sockopts)
+                if True: # TODO: make a flag for keeping client options
+                    clientOptions = RequestsCodec().decode_HarClientOptions_from_Session(self)
+                    entry._clientOptions.__dict__.update(clientOptions)
             self._entries.extend(new_entries)
 
     def _update_entry(self, attr, value, index = -1):
