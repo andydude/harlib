@@ -105,7 +105,7 @@ class HarSessionMixin(object):
             except (IOError, OSError) as err:
                 logger.warning('%s %s' % (type(err), repr(err)))
             except Exception as err:
-                logger.error('%s %s' % (type(err), repr(err)))
+                logger.error('%s %s' % (type(err), repr(err)), exc_info=True)
 
         VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV')
         filename = self._filename

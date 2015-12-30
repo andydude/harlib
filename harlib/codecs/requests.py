@@ -264,9 +264,9 @@ class RequestsCodec(object):
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
-        method_name = 'decode_%s_from_%s' % (har_class.__name__, raw.__class__.__name__)
-        method = getattr(self, method_name)
-        return method(raw)
+        method_name = 'decode_%s_from_%s' % (
+            har_class.__name__, raw.__class__.__name__)
+        return getattr(self, method_name)(raw)
 
     def decode_HarLog_from_Response(self, raw):
         har = []
