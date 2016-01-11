@@ -70,6 +70,15 @@ class HarSessionMixin(object):
         nentries = len(self._entries)
         if self._filename and self._entries:
 
+            # add metadata
+            if not extra is None:
+                if isinstance(extra, dict):
+                    extra_data = extra
+                else:
+                    extra_data = extra.to_json()
+                for entry in self._entries:
+                    entry._metadata = extra_data
+
             # make directory
             try:
                 dirname = os.path.dirname(self._filename)

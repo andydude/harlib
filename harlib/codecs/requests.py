@@ -90,7 +90,7 @@ class Urllib3Codec(object):
         har = self.dict_class()
         har['decodeContent'] = raw.decode_content
         return har
-    
+
     def decode_HarResponse_from_HTTPResponse(self, raw):
         har = self.dict_class()
         har['status'] = raw.status
@@ -171,7 +171,7 @@ class RequestsCodec(object):
 
     dict_class = dict
     response_class = requests.Response
-    modules = ['requests.models']
+    modules = ['requests.models', 'one.web.http.objects']
     urllib3_codec = Urllib3Codec()
 
     def __init__(self):
@@ -268,6 +268,11 @@ class RequestsCodec(object):
             har_class.__name__, raw.__class__.__name__)
         return getattr(self, method_name)(raw)
 
+    def decode_HarLog_from_OneResponse(self, raw):
+        resp = requests.models.Response()
+        resp.__dict__ = raw.__dict__.copy()
+        return self.decode_HarLog_from_Response(resp)
+
     def decode_HarLog_from_Response(self, raw):
         har = []
         if hasattr(raw, 'history') and raw.history and len(raw.history) > 0:
@@ -297,7 +302,7 @@ class RequestsCodec(object):
         har['decodeContent'] = raw.raw.decode_content
         #har['contentRead'] = raw.raw._fp_bytes_read
         return har
-    
+
     def decode_HarClientOptions_from_Session(self, raw):
         har = self.dict_class()
         proxies = self.dict_class()
@@ -311,7 +316,7 @@ class RequestsCodec(object):
             pass
         har['proxies'] = proxies
         return har
-    
+
     def decode_HarResponse_from_Response(self, raw):
         har = self.dict_class()
         har['status'] = raw.status_code
