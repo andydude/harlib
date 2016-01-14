@@ -222,6 +222,7 @@ $(function(){
 
     window.onClickRemoteOpen = function (tag, event) {
         var $tag = $('#remote-file-name')[0];
+        $('#loadingModal').modal('show')
         $.ajax({
             "url": $tag.value.trim(),
             "dataType": "json",
@@ -229,6 +230,7 @@ $(function(){
                 window.alert(errorThrown);
             },
             "success": function(data, textStatus, request) {
+                $('#loadingModal').modal('hide')
                 window.gHarFile = data;
                 window.onInputHarFile(window.gHarFile);
             }
