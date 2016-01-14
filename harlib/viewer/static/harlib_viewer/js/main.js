@@ -225,9 +225,6 @@ $(function(){
         $.ajax({
             "url": $tag.value.trim(),
             "dataType": "json",
-            "dataFilter": function(string, dataType) {
-                return JSON.parse(string);
-            },
             "error": function(request, textStatus, errorThrown) {
                 window.alert(errorThrown);
             },
