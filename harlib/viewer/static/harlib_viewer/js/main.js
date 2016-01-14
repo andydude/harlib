@@ -225,8 +225,14 @@ $(function(){
         $.ajax({
             "url": $tag.value.trim(),
             "dataType": "json",
-            "success": function( response ) {
-                window.gHarFile = response;
+            "dataFilter": function(string, dataType) {
+                return JSON.parse(string);
+            },
+            "error": function(request, textStatus, errorThrown) {
+                window.alert(errorThrown);
+            },
+            "success": function(data, textStatus, request) {
+                window.gHarFile = data;
                 window.onInputHarFile(window.gHarFile);
             }
         });
