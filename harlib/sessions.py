@@ -8,7 +8,6 @@
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
-import json
 import logging
 import os
 import requests
@@ -26,6 +25,7 @@ except ImportError:
     DEFAULT_STREAM = False
 
 logger = logging.getLogger(__name__)
+
 
 class HarSocketManager(object):
 
@@ -185,9 +185,13 @@ class HarSessionMixin(object):
                 pass
             content = content_without_reponse_text
             try:
-                content += str(entry.response.content.text)
+                content += entry.response.content.text.encode('ascii', 'ignore')
             except AttributeError:
                 pass
+            except UnicodeEncodeError as ex:
+                logger.warning('UnicodeEncodeError computing text for hash: %s' % ex)
+            except Exception as ex:
+                logger.warning('Exception computing text for hash: %s %s' % (type(ex), ex,))
         sha_hash = hashlib.new('sha1')
         try:
             sha_hash.update(content.encode('ascii', 'ignore'))
