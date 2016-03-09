@@ -166,29 +166,37 @@ class HarSessionMixin(object):
 
     def get_content_hash(self):
         content = ''
+        content_without_reponse_text = ''
         for entry in self._entries:
-            content += entry.request.method
-            content += entry.request.url
+            content_without_reponse_text += entry.request.method
+            content_without_reponse_text += entry.request.url
             try:
-                content += str(entry.response.postData.text)
+                content_without_reponse_text += str(entry.response.postData.text)
             except Exception:
                 pass
             try:
-                content += str(entry.request.headers)
+                content_without_reponse_text += str(entry.request.headers)
             except Exception:
                 pass
-            content += str(entry.response.status)
+            content_without_reponse_text += str(entry.response.status)
             try:
-                content += str(entry.response.content.encoding)
+                content_without_reponse_text += str(entry.response.content.encoding)
             except AttributeError:
                 pass
+            content = content_without_reponse_text
             try:
                 content += str(entry.response.content.text)
             except AttributeError:
                 pass
         sha_hash = hashlib.new('sha1')
-        sha_hash.update(content)
+        try:
+            sha_hash.update(content.encode('ascii', 'ignore'))
+        except UnicodeEncodeError as ex:
+            logger.warning('UnicodeEncodeError generating hash: %s' % ex)
+            sha_hash.update(content_without_reponse_text)
         sha_hash_digest = sha_hash.hexdigest()
+        del content_without_reponse_text
+        del content
         return sha_hash_digest
 
     if utils.HAS_XML:
