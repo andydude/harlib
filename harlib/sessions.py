@@ -171,7 +171,7 @@ class HarSessionMixin(object):
             content_without_reponse_text += entry.request.method
             content_without_reponse_text += entry.request.url
             try:
-                content_without_reponse_text += str(entry.response.postData.text)
+                content_without_reponse_text += str(entry.request.postData.text)
             except Exception:
                 pass
             try:
