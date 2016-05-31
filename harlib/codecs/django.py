@@ -134,9 +134,10 @@ class DjangoCodec(object):
         har['compression'] = -1
         return har
 
-    decode_HarResponse_from_Response = decode_HarResponse_from_HttpResponse
     decode_HarRequest_from_WSGIRequest = decode_HarRequest_from_HttpRequest
     decode_HarRequestBody_from_WSGIRequest = decode_HarRequestBody_from_HttpRequest
+    decode_HarResponse_from_Response = decode_HarResponse_from_HttpResponse
+    decode_HarResponseBody_from_Response = decode_HarResponseBody_from_HttpResponse
     decode_HarResponse_from_HttpResponseRedirect = decode_HarResponse_from_HttpResponse
     decode_HarResponse_from_HttpResponsePermanentRedirect = decode_HarResponse_from_HttpResponse
     decode_HarResponse_from_HttpResponseNotModified = decode_HarResponse_from_HttpResponse
