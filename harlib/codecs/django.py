@@ -3,7 +3,7 @@
 #
 # harlib
 # Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
+#
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
@@ -22,8 +22,10 @@ class DjangoCodec(object):
     response_class = django.http.response.HttpResponse
     modules = [
         'django.http.request',
-        'django.http.response', 
-        'django.core.handlers.wsgi'
+        'django.http.response',
+        'django.core.handlers.wsgi',
+        'rest_framework.request',
+        'rest_framework.response',
     ]
 
     def __init__(self):
@@ -55,9 +57,12 @@ class DjangoCodec(object):
             har_class.__name__, raw.__class__.__name__)
         return getattr(self, method_name)(raw)
 
+    def decode_HarRequest_from_Request(self, raw):
+        return self.decode_HarRequest_from_HttpRequest(raw._request)
+
     def decode_HarRequest_from_HttpRequest(self, raw):
         version = os.environ.get('SERVER_PROTOCOL', 'HTTP/1.1')
-        url = '%s://%s%s' % (os.environ.get('wsgi.url_scheme', 'http'), 
+        url = '%s://%s%s' % (os.environ.get('wsgi.url_scheme', 'http'),
                              raw.get_host(), raw.get_full_path())
 
         har = self.dict_class()
@@ -100,7 +105,7 @@ class DjangoCodec(object):
 
     def decode_HarCookies_from_HttpResponse(self, raw):
         return []
-    
+
     def decode_HarHeaders_from_HttpResponse(self, raw):
         headers = map(lambda i: (i[1][0],i[1][1]), raw._headers.items())
         return headers
@@ -129,6 +134,7 @@ class DjangoCodec(object):
         har['compression'] = -1
         return har
 
+    decode_HarResponse_from_Response = decode_HarResponse_from_HttpResponse
     decode_HarRequest_from_WSGIRequest = decode_HarRequest_from_HttpRequest
     decode_HarRequestBody_from_WSGIRequest = decode_HarRequestBody_from_HttpRequest
     decode_HarResponse_from_HttpResponseRedirect = decode_HarResponse_from_HttpResponse

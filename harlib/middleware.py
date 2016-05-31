@@ -40,8 +40,7 @@ MIDDLEWARE_CLASSES = (
                  'response': harlib.HarResponse(response)}
 
             s = json.dumps(harlib.HarEntry(d).to_json(with_content=False))
-
-            logger.debug(s)
+            logger.info(s)
         except Exception as err:
             logger.error("%s %s" % (type(err), repr(err)))
 
