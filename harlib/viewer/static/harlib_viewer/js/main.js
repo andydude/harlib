@@ -72,6 +72,7 @@ $(function(){
 
     var optionsTabTemplate = Handlebars.compile($('#options-tab-template').html());
 
+    var exportsTabTemplate = Handlebars.compile($('#exports-tab-template').html());
 
     var entryTemplate = Handlebars.compile($('#entry-template').html());
 
@@ -157,6 +158,32 @@ $(function(){
         return;
     };
 
+    window.onInputResponseText = function (tag) {
+        var text = tag.textContent.trim();
+        if (text[0] == '{' || text[0] == '[') {
+            var data = JSON.parse(text);
+            tag.textContent = JSON.stringify(data, null, 4);
+        } else if (text[0] == '<') {
+            var prettyTransform = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"><xsl:output omit-xml-declaration="yes" indent="yes"/><xsl:template match="node()|@*"><xsl:copy><xsl:apply-templates select="node()|@*"/></xsl:copy></xsl:template></xsl:stylesheet>';
+
+            if (window.hasOwnProperty('XSLTProcessor')) {
+                var prettyText = null;
+                try {
+                    var proc = new XSLTProcessor(); proc.importStylesheet($.parseXML(prettyTransform));
+                    prettyText = proc.transformToDocument($.parseXML(text)).childNodes[0].outerHTML;
+                    if (prettyText) {
+                        tag.textContent = prettyText;
+                    } else {
+                        tag.textContent = text;
+                    }
+                } catch (e) {
+                    /* probably HTML */
+                    console.log(e);
+                }
+            }
+        }
+    }
+
     window.onInputHarEntry = function (entry) {
         $('#headers')	.html(headersTabTemplate(entry));
         $('#cookies')	.html(cookiesTabTemplate(entry));
@@ -165,6 +192,8 @@ $(function(){
         $('#response')	.html(responseTabTemplate(entry));
         $('#timing')	.html(timingsTabTemplate(entry));
         $('#options')	.html(optionsTabTemplate(entry));
+        $('#exports')	.html(exportsTabTemplate(entry));
+        window.onInputResponseText($('#response pre')[0]);
 
         $('.main-panel .tab-pane').each(function(index, value){
             var $value = $(value);
@@ -195,27 +224,38 @@ $(function(){
             $('#options-tab').addClass('hidden');
         }
 
+        $('#exports-tab').removeClass('hidden');
+
         return;
     };
 
     window.onClickHarEntry = function (tag) {
-        var index = $(tag).data('index');
+        window.gHarIndex = $(tag).data('index');
         var $list = $('#entries > table > tbody > tr');
         $list.each(function(index, value){
             $(value).removeClass('info');
         });
-        $($list[index]).addClass('info');
+        $($list[window.gHarIndex]).addClass('info');
 
-        var entry = window.gHarFile.log.entries[index];
-        window.onInputHarEntry(entry);
+        window.gHarEntry = window.gHarFile.log.entries[window.gHarIndex];
+        window.onInputHarEntry(window.gHarEntry);
         return;
     };
 
     window.onClickRemoteOpen = function (tag, event) {
         var $tag = $('#remote-file-name')[0];
-        $.get($tag.value.trim(), function( response ) {
-            window.gHarFile = response;
-            window.onInputHarFile(window.gHarFile);
+        $('#loadingModal').modal('show')
+        $.ajax({
+            "url": $tag.value.trim(),
+            "dataType": "json",
+            "error": function(request, textStatus, errorThrown) {
+                window.alert(errorThrown);
+            },
+            "success": function(data, textStatus, request) {
+                $('#loadingModal').modal('hide')
+                window.gHarFile = data;
+                window.onInputHarFile(window.gHarFile);
+            }
         });
     };
 
@@ -234,6 +274,53 @@ $(function(){
         var $tag = $('#direct-input-data')[0];
         window.gHarFile = JSON.parse($tag.value);
         window.onInputHarFile(window.gHarFile);
+    };
+
+    window.forceDownloadFile = function (filename, content, contentType) {
+        var datetime = (new Date()).toISOString().replace(/:/g, '-').replace(/T/g, '-').split('.')[0];
+        filename = datetime + '-' + filename;
+
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:' + contentType + ',' + encodeURIComponent(content));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    };
+
+    window.onExportAsTxt = function (tag, event) {
+        var filename = '1ticket-harlib-viewer.txt';
+        var contentType = 'text/plain;charset=utf-8';
+        var content = 'TODO';
+        window.forceDownloadFile(filename, content, contentType);
+    };
+
+    window.onExportAsXml = function (tag, event) {
+        var filename = '1ticket-harlib-viewer.har.xml';
+        var contentType = 'application/xml;charset=utf-8';
+        var content = 'TODO';
+        window.forceDownloadFile(filename, content, contentType);
+    };
+
+    window.onExportAsHar = function (tag, event) {
+        var filename = '1ticket-harlib-viewer.har.json';
+        var contentType = 'application/har+json;charset=utf-8';
+        var harEntry = window.gHarEntry;
+        var harFile = {"log": {"version": "1.2", "entries": [harEntry],
+                               "creator": {"name": "harlib-viewer", "version": "0.6.15"}}}
+        var content = JSON.stringify(harFile, null, 4);
+        window.forceDownloadFile(filename, content, contentType);
+    };
+
+    window.onExportAllAsHar = function (tag, event) {
+        var filename = '1ticket-harlib-viewer.all.har.json';
+        var contentType = 'application/har+json;charset=utf-8';
+        var content = JSON.stringify(window.gHarFile, null, 4);
+        window.forceDownloadFile(filename, content, contentType);
     };
 
     //window.onInputHarFile(gHarFile);

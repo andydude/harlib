@@ -8,7 +8,7 @@
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
-import collections
+from collections import Mapping
 import json
 import os
 import six
@@ -49,7 +49,7 @@ class HarRequestBody(HarMessageBody): # <postData>
     def __init__(self, obj=None):
         har = obj or None
 
-        if isinstance(obj, collections.Mapping):
+        if isinstance(obj, Mapping):
             har = obj
         elif isinstance(obj, HarObject):
             har = obj.to_json()
@@ -109,7 +109,7 @@ class HarRequest(HarMessage):
     def __init__(self, obj=None):
         har = obj or None
 
-        if isinstance(obj, collections.Mapping):
+        if isinstance(obj, Mapping):
             har = obj
         elif isinstance(obj, HarObject):
             har = obj.to_json()

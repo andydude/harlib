@@ -25,6 +25,7 @@ class HarClientOptions(HarObject):
         'decodeContent': False,
         'failOnError': False,
         'host': '',
+        'proxies': {},
         'mimeType': 'text/plain',
         'transferEncoding': '',
         'unverifiable': False,
@@ -43,6 +44,7 @@ class HarClientOptions(HarObject):
         'failOnError': bool,
         'unverifiable': bool,
         'verbosity': int,
+        'proxies': dict,
     }
 
 class HarServerOptions(HarObject):

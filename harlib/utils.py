@@ -3,7 +3,7 @@
 #
 # harlib
 # Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
+#
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
@@ -11,10 +11,13 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-from collections import OrderedDict
-import multipart
 import json
 import six
+from collections import Mapping
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 def render_http_version(num):
     '''
@@ -54,21 +57,26 @@ def decode_json(o, **kwargs):
         d = json.loads(d)
     har = map(dict_from_pair, d.items())
     return har
-    
+
 def decode_multipart(o, content_type, **kwargs):
     har = []
-    if isinstance(o, basestring):
-        content_type, options = multipart.parse_options_header(content_type)
-        assert content_type == 'multipart/form-data'
-        stream = six.BytesIO(o)
-        boundary = six.binary_type(options.get('boundary'))
-        assert boundary
-        for part in multipart.MultipartParser(stream, boundary, len(o), **kwargs):
-            if part.filename or not part.is_buffered():
-                param = {'name': part.name, 'value': str(part.value), 'filename': str(part.filename)}
-            else: # TODO: Big form-fields are in the files dict. really?
-                param = {'name': part.name, 'value': str(part.value)}
-            har.append(param)
+
+    try:
+        if isinstance(o, basestring):
+            import multipart
+            content_type, options = multipart.parse_options_header(content_type)
+            assert content_type == 'multipart/form-data'
+            stream = six.BytesIO(o)
+            boundary = six.binary_type(options.get('boundary'))
+            assert boundary
+            for part in multipart.MultipartParser(stream, boundary, len(o), **kwargs):
+                if part.filename or not part.is_buffered():
+                    param = {'name': part.name, 'value': str(part.value), 'filename': str(part.filename)}
+                else: # TODO: Big form-fields are in the files dict. really?
+                    param = {'name': part.name, 'value': str(part.value)}
+                har.append(param)
+    except:
+        pass
 
     return har
 
@@ -88,7 +96,7 @@ def encode_query(d):
     if isinstance(d, dict):
         d = d.items()
     if isinstance(d, list):
-        if isinstance(d[0], collections.Mapping):
+        if isinstance(d[0], Mapping):
             d = map(lambda p: (p['name'], p['value']), d)
         for name, value in d:
             har += '&' + str(name) + '=' + str(value)
@@ -102,7 +110,7 @@ def encode_query(d):
 def get_sockopts_from_response(resp):
     '''
     Warning: if you are using this with requests, then you MUST set stream=True
-    in the request for this to work, then after running this function, you can 
+    in the request for this to work, then after running this function, you can
     reimplement the will_close logic and read the socket to a buffer.
     '''
     scheme = resp.request.url.split(':', 1)[0]
@@ -237,7 +245,7 @@ try:
         'cache': 'cacheEntry',
         '_socketOptions': '_socketOption',
     }
-    
+
     def xml_dump_named_tree(key, value, soup=None, default=str):
         tag = soup.new_tag(name=key)
         if isinstance(value, list):
@@ -253,11 +261,15 @@ try:
             tag.append(soup.new_string(default(value)))
             #'<%s>%s</%s>' % (key, default(value), key)).children[0].children[0].children[0]
         return tag
-    
-    def xml_dumps(d):
+
+    def xml_dumps(d, indent=False):
         soup = bs4.BeautifulSoup('<root></root>')
         tag = xml_dump_named_tree('root', d, soup=soup)
-        s = str(list(tag.children)[0])
+        tag = list(tag.children)[0]
+        if indent:
+            s = tag.prettify(formatter='xml')
+        else:
+            s = str(tag)
         return s
 
     HAS_XML = True
@@ -268,7 +280,7 @@ except ImportError:
 ## YAML stuff
 try:
     import yaml
-    
+
     def yaml_represent_ordered_mapping(self, tag, mapping, flow_style=None):
         value = []
         node = yaml.MappingNode(tag, value, flow_style=flow_style)
@@ -291,7 +303,7 @@ try:
             else:
                 node.flow_style = best_style
         return node
-    
+
     yaml.representer.BaseRepresenter.represent_mapping = yaml_represent_ordered_mapping
     yaml.representer.Representer.add_representer(OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 

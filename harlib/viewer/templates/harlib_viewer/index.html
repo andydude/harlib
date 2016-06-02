@@ -174,6 +174,14 @@
             <h4 class="text-primary">Socket Options</h4>
             {{{sockopts _socketOptions}}}
         </script>
+
+        <script id="exports-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
+            <h4 class="text-primary">Export all entries</h4>
+            <button onclick="onExportAllAsHar()">Export all entries as .har.json</button>
+            <h4 class="text-primary">Export current entry</h4>
+            <button onclick="onExportAsHar()">Export current entry as .har.json</button>
+        </script>
 {% endverbatim %}
     </head>
     <body>
@@ -277,6 +285,7 @@
                                     <!--li id="preview-tab"><a href="#preview" role="tab" data-toggle="tab">Preview</a></li-->
                                     <li id="timing-tab"><a href="#timing" role="tab" data-toggle="tab">Timing</a></li>
                                     <li id="options-tab" class="hidden"><a href="#options" role="tab" data-toggle="tab">Options</a></li>
+                                    <li id="exports-tab"><a href="#exports" role="tab" data-toggle="tab">Exports</a></li>
                                 </ul>
                                 <div class="tab-content">
                                     <div class="tab-pane active" style="height: 635px; overflow: scroll;" id="headers"></div>
@@ -287,6 +296,7 @@
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="preview"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="timing"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="options"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="exports"></div>
                                 </div>
                             </div>
                         </div>
@@ -294,6 +304,23 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Loading...</h4>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p>&nbsp;</p>
+                        <p><span class="glyphicon glyphicon-refresh spinning"
+                                 style="font-size: 8em; line-height: 1; vertical-align: middle;"></span></p>
+                        <p>&nbsp;</p>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
 
         <script src="/static/harlib_viewer/js/main.js"></script>
     </body>

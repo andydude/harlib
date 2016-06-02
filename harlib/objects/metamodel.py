@@ -3,15 +3,18 @@
 #
 # harlib
 # Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
+#
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from metaobject import MetaObject
-import collections
 import json
 import logging
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +43,7 @@ class HarObject(MetaObject):
         # we want to see private attributes as well
         return self._changed_items()
 
-    def to_json(self, dict_class=collections.OrderedDict):
+    def to_json(self, dict_class=OrderedDict):
         return super(HarObject, self).to_json(dict_class=dict_class)
 
     def decode(self, raw):
@@ -66,10 +69,11 @@ def initialize_codecs():
     HarObject._codecs = []
 
     try:
-        import harlib.codecs.django
-        HarObject._codecs.append(harlib.codecs.django.DjangoCodec())
+        import harlib.codecs.requests
+        HarObject._codecs.append(harlib.codecs.requests.Urllib3Codec())
+        HarObject._codecs.append(harlib.codecs.requests.RequestsCodec())
     except:
-        print("no django")
+        print("no requests")
 
     try:
         import harlib.codecs.httplib
@@ -77,21 +81,17 @@ def initialize_codecs():
         HarObject._codecs.append(harlib.codecs.httplib.HttplibCodec())
     except:
         print("no httplib")
-        pass
 
     try:
-        import harlib.codecs.requests
-        HarObject._codecs.append(harlib.codecs.requests.Urllib3Codec())
-        HarObject._codecs.append(harlib.codecs.requests.RequestsCodec())
+        import harlib.codecs.django
+        HarObject._codecs.append(harlib.codecs.django.DjangoCodec())
     except:
-        print("no requests")
-        pass
+        print("no django")
 
     try:
         import harlib.codecs.default
         HarObject._codecs.append(harlib.codecs.default.DefaultCodec())
     except:
         print("no default")
-        pass
 
 initialize_codecs()

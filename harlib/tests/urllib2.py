@@ -84,7 +84,7 @@ class TestUrllib2Response(TestUtils):
         self.assertEqual(json_resp['url'], 'http://httpbin.org/post')
         self.assertEqual(json_resp['headers']['Accept'], '*/*')
         self.assertEqual(json_resp['headers']['Accept-Encoding'], 'identity')
-        self.assertEqual(json_resp['headers']['Connection'], 'close')
+        #self.assertEqual(json_resp['headers']['Connection'], 'close')
         self.assertEqual(json_resp['headers']['Host'], 'httpbin.org')
         self.assertEqual(json_resp['headers']['User-Agent'], 'Python-urllib/2.7')
         self.assertEqual(json_resp['headers']['Content-Type'], 

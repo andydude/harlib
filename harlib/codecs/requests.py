@@ -9,15 +9,21 @@
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from requests.packages import urllib3 as urllib3r
-import collections
 import requests
 import urllib3
 import harlib
 import six
 from six.moves import http_client
 from .httplib import HttplibCodec
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 KEEP_SIZE = False
+
+def from_pair(x):
+    return x[0] + ': ' + x[1]
 
 class Urllib3Codec(object):
 
@@ -77,8 +83,12 @@ class Urllib3Codec(object):
         har['time'] = 0
         har['request'] = raw
         har['response'] = raw
-        har['_clientOptions'] = self.dict_class()
-        har['_clientOptions']['decodeContent'] = raw.decode_content
+        har['_clientOptions'] = self.decode_HarClientOptions_from_HTTPResponse(raw)
+        return har
+
+    def decode_HarClientOptions_from_HTTPResponse(self, raw):
+        har = self.dict_class()
+        har['decodeContent'] = raw.decode_content
         return har
 
     def decode_HarResponse_from_HTTPResponse(self, raw):
@@ -139,7 +149,7 @@ class Urllib3Codec(object):
     #    har['fileName'] = obj._filename
     #    har['contentType'] = obj.headers.get('content-type')
     #    if hasattr(obj, 'headers'):
-    #        if isinstance(obj.headers, collections.Mapping):
+    #        if isinstance(obj.headers, Mapping):
     #            har['_headers'] = map(HarHeader, obj.headers.items())
 
     #    d = dict()
@@ -161,7 +171,7 @@ class RequestsCodec(object):
 
     dict_class = dict
     response_class = requests.Response
-    modules = ['requests.models']
+    modules = ['requests.models', 'one.web.http.objects']
     urllib3_codec = Urllib3Codec()
 
     def __init__(self):
@@ -198,8 +208,8 @@ class RequestsCodec(object):
         resp._content_consumed = True
         resp.status_code = har.status
         resp.reason = har.statusText
-        resp.cookies = CookiesCls(collections.OrderedDict(cookies))
-        resp.headers = HeadersCls(collections.OrderedDict(headers))
+        resp.cookies = CookiesCls(OrderedDict(cookies))
+        resp.headers = HeadersCls(OrderedDict(headers))
         resp.raw = self.urllib3_codec.encode(har, urllib3r.response.HTTPResponse)
         resp.url = har.redirectURL
         resp.history = []
@@ -238,8 +248,8 @@ class RequestsCodec(object):
         preq = RequestCls()
         preq.method = har.method
         preq.url = har.url
-        preq.headers = HeadersCls(collections.OrderedDict(headers))
-        preq._cookies = CookiesCls(collections.OrderedDict(cookies))
+        preq.headers = HeadersCls(OrderedDict(headers))
+        preq._cookies = CookiesCls(OrderedDict(cookies))
 
         if har.postData:
             preq.body = har.postData.text
@@ -254,9 +264,14 @@ class RequestsCodec(object):
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
-        method_name = 'decode_%s_from_%s' % (har_class.__name__, raw.__class__.__name__)
-        method = getattr(self, method_name)
-        return method(raw)
+        method_name = 'decode_%s_from_%s' % (
+            har_class.__name__, raw.__class__.__name__)
+        return getattr(self, method_name)(raw)
+
+    def decode_HarLog_from_OneResponse(self, raw):
+        resp = requests.models.Response()
+        resp.__dict__ = raw.__dict__.copy()
+        return self.decode_HarLog_from_Response(resp)
 
     def decode_HarLog_from_Response(self, raw):
         har = []
@@ -278,10 +293,28 @@ class RequestsCodec(object):
         har['cache'] = {}
         har['timings'] = self.decode_HarTimings_from_Response(raw)
         har['connection'] = ''
-        har['_clientOptions'] = self.dict_class()
-        har['_clientOptions']['charset'] = raw.encoding
-        har['_clientOptions']['decodeContent'] = raw.raw.decode_content
-        #har['_clientOptions']['contentRead'] = raw.raw._fp_bytes_read
+        har['_clientOptions'] = self.decode_HarClientOptions_from_Response(raw)
+        return har
+
+    def decode_HarClientOptions_from_Response(self, raw):
+        har = self.dict_class()
+        har['charset'] = raw.encoding
+        har['decodeContent'] = raw.raw.decode_content
+        #har['contentRead'] = raw.raw._fp_bytes_read
+        return har
+
+    def decode_HarClientOptions_from_Session(self, raw):
+        har = self.dict_class()
+        proxies = self.dict_class()
+        try:
+            proxies['http'] = raw.adapters['http://'].proxy_manager.keys()[0]
+        except:
+            pass
+        try:
+            proxies['https'] = raw.adapters['https://'].proxy_manager.keys()[0]
+        except:
+            pass
+        har['proxies'] = proxies
         return har
 
     def decode_HarResponse_from_Response(self, raw):
@@ -297,7 +330,7 @@ class RequestsCodec(object):
         har['redirectURL'] = raw.url if raw.url != raw.request.url else ''
 
         try:
-            headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
+            headers = '\r\n'.join(map(from_pair, har['headers']))
             har['headersSize'] = len(headers + '\r\n\r\n')
             har['bodySize'] = len(har['content']['text'])
         except:
@@ -356,7 +389,7 @@ class RequestsCodec(object):
         har['queryString'] = self.decode_HarQueryStringParams(raw)
 
         try:
-            headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
+            headers = '\r\n'.join(map(from_pair, har['headers']))
             har['headersSize'] = len(headers + '\r\n\r\n')
             har['bodySize'] = len(har['postData']['text'])
         except:

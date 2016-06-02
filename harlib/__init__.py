@@ -3,7 +3,7 @@
 #
 # harlib
 # Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
+#
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
@@ -33,16 +33,23 @@ if __name__ == '__main__':
     print("url:", __homepage_url__)
 
 else:
+
     # only import after installing six
     try:
         import six
         from .objects import *
-    except ImportError:
-        pass
+    except ImportError as err:
+        print(repr(err))
 
     # only import HarSession if requests is installed
     try:
         import requests
         from .sessions import HarSessionMixin, HarSession
-    except ImportError:
-        pass
+    except ImportError as err:
+        print(repr(err))
+
+    # this might fail is any codec is not installed
+    try:
+        from . import tests
+    except ImportError as err:
+        print(repr(err))

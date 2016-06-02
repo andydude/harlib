@@ -11,8 +11,11 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-import collections
 import json
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 def by_name(har):
     return har['name']
@@ -52,7 +55,7 @@ def har_sort_main():
     import sys
     filename = sys.argv[1]
     with open(filename, 'r') as f:
-        d = json.load(f, object_pairs_hook=collections.OrderedDict)
+        d = json.load(f, object_pairs_hook=OrderedDict)
     d = sorted_har(d)
     print(json.dumps(d, indent=2, default=str, separators=(',',': ')))
 

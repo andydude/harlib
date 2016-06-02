@@ -8,7 +8,7 @@
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
-import collections
+from collections import Mapping
 import json
 import six
 from six.moves import http_client as httplib
@@ -146,9 +146,9 @@ class HarMessage(HarObject):
     #        cookies = obj.cookies
     #    if isinstance(obj, requests.Response):
     #        cookies = obj.cookies
-    #    if isinstance(obj, collections.Mapping):
+    #    if isinstance(obj, Mapping):
     #        cookies = obj
-    #    if isinstance(cookies, collections.Mapping):
+    #    if isinstance(cookies, Mapping):
     #        cookies = cookies.items()
     #    #if isinstance(cookies, six.string_types):
     #    #    cookies = map(lambda x: x.split('=', 1), cookies.split(';'))
@@ -172,7 +172,7 @@ class HarMessage(HarObject):
     #        headers = obj.headers.lower_items()
     #    if isinstance(obj, requests.Response):
     #        headers = obj.headers.lower_items()
-    #    if isinstance(obj, collections.Mapping):
+    #    if isinstance(obj, Mapping):
     #        headers = obj.items()
     #    if isinstance(obj, list):
     #        headers = obj
@@ -217,7 +217,7 @@ class HarPostDataParam(HarNameValuePair): # <params>
     def __init__(self, obj=None):
         har = obj
 
-        if isinstance(obj, collections.Mapping):
+        if isinstance(obj, Mapping):
             har = obj
         elif isinstance(obj, HarObject):
             har = obj.to_json()
