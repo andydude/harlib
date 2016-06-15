@@ -194,7 +194,10 @@ class HarSessionMixin(object):
                 logger.warning('Exception computing text for hash: %s %s' % (type(ex), ex,))
         sha_hash = hashlib.new('sha1')
         try:
-            sha_hash.update(content.encode('ascii', 'ignore'))
+            if isinstance(content, unicode):
+                sha_hash.update(content.encode('latin1', 'ignore'))
+            else:
+                sha_hash.update(content)
         except UnicodeEncodeError as ex:
             logger.warning('UnicodeEncodeError generating hash: %s' % ex)
             sha_hash.update(content_without_reponse_text)
