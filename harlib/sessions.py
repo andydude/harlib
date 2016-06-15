@@ -185,7 +185,10 @@ class HarSessionMixin(object):
                 pass
             content = content_without_reponse_text
             try:
-                content += entry.response.content.text.encode('ascii', 'ignore')
+                if isinstance(entry.response.content.text, unicode):
+                    content += entry.response.content.text.encode('latin1', 'ignore')
+                else:
+                    content += entry.response.content.text
             except AttributeError:
                 pass
             except UnicodeEncodeError as ex:
