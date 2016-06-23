@@ -9,8 +9,6 @@
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from collections import Mapping
-import json
-import six
 from six.moves import http_client as httplib
 from six.moves import http_cookiejar
 from .metamodel import HarObject

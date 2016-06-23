@@ -24,6 +24,7 @@ class DjangoCodec(object):
         'django.http.request',
         'django.http.response',
         'django.core.handlers.wsgi',
+        'django.template.response',
         'rest_framework.request',
         'rest_framework.response',
     ]
@@ -138,6 +139,10 @@ class DjangoCodec(object):
     decode_HarRequestBody_from_WSGIRequest = decode_HarRequestBody_from_HttpRequest
     decode_HarResponse_from_Response = decode_HarResponse_from_HttpResponse
     decode_HarResponseBody_from_Response = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponse_from_SimpleTemplateResponse = decode_HarResponse_from_HttpResponse
+    decode_HarResponseBody_from_SimpleTemplateResponse = decode_HarResponseBody_from_HttpResponse
+    decode_HarResponse_from_TemplateResponse = decode_HarResponse_from_HttpResponse
+    decode_HarResponseBody_from_TemplateResponse = decode_HarResponseBody_from_HttpResponse
     decode_HarResponse_from_HttpResponseRedirect = decode_HarResponse_from_HttpResponse
     decode_HarResponse_from_HttpResponsePermanentRedirect = decode_HarResponse_from_HttpResponse
     decode_HarResponse_from_HttpResponseNotModified = decode_HarResponse_from_HttpResponse

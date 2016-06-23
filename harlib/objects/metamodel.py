@@ -9,7 +9,6 @@
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from metaobject import MetaObject
-import json
 import logging
 try:
     from collections import OrderedDict

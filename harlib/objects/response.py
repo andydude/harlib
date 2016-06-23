@@ -10,9 +10,6 @@
 from __future__ import absolute_import
 from six.moves import (http_client, urllib)
 import collections
-import json
-import six
-
 from .metamodel import HarObject
 
 from .messages import (
