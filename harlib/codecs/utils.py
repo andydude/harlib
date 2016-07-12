@@ -1,3 +1,0 @@
-class CodecUtils(object):
-    pass
-

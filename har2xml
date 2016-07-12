@@ -1,7 +1,0 @@
-#!/bin/bash
-
-HAR_SCRIPT='import sys, json, harlib;\
-  print harlib.HarSession(True).from_har(\
-    harlib.HarFile(json.loads(open(sys.argv[1]).read()))).to_xml()'
-
-python -c "$HAR_SCRIPT" "$@" | xmllint --format -
