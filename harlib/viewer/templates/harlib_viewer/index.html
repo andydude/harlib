@@ -189,7 +189,7 @@
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
 
-        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+        <nav class="navbar navbar-inverse navbar-oneticket navbar-static-top" role="navigation">
             <div class="container">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -198,11 +198,12 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="#"><b>HarLib Viewer</b></a>
+                    <a class="navbar-brand" href="//1ticket.com/landing"><img src="/static/harlib_viewer/img/login_logo.jpg"/></a>
                 </div>
 
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav" role="tablist">
+                        <li><a class="navbar-brand" href="#">HarViewer</a></li>
                         <li id="remote-input-tab" class="active"><a href="#remote-input" role="tab" data-toggle="tab">Remote</a></li>
                         <li id="local-input-tab"><a href="#local-input" role="tab" data-toggle="tab">Local</a></li>
                         <li id="direct-input-tab"><a href="#direct-input" role="tab" data-toggle="tab">Direct</a></li>
@@ -215,7 +216,7 @@
             <div class="tab-pane active" id="remote-input">
                 <form class="form-horizontal container" role="form">
                     <div class="form-group">
-                        <label for="inputEmail3" class="col-sm-2 control-label">Remote location</label>
+                        <label for="remote-file-name" class="col-sm-2 control-label">Remote location</label>
                         <div class="col-sm-10">
 	                        <div class="input-group">
 		                        <input id="remote-file-name" type="text" class="form-control" placeholder="Remote location" value="{{ remote_location|striptags }}"/>
@@ -230,7 +231,7 @@
             <div class="tab-pane" id="local-input">
                 <form class="form-horizontal container" role="form">
                     <div class="form-group">
-                        <label for="inputEmail3" class="col-sm-2 control-label">Local filename</label>
+                        <label for="local-file" class="col-sm-2 control-label">Local filename</label>
                         <div class="col-sm-10">
 	                        <div class="input-group">
 		                        <input id="local-file" name="local-file" type="file" class="form-control" placeholder="Local filename"/>
@@ -245,7 +246,7 @@
             <div class="tab-pane" id="direct-input">
                 <form class="form-horizontal container" role="form">
                     <div class="form-group">
-                        <label for="inputEmail3" class="col-sm-2 control-label">Direct input</label>
+                        <label for="direct-input-data" class="col-sm-2 control-label">Direct input</label>
                         <div class="col-sm-8">
                             <textarea id="direct-input-data" name="direct-input-data" class="form-control" rows="3" placeholder="Direct input"></textarea>
                         </div>
@@ -261,9 +262,6 @@
 
         <div class="col-xs-12">
             <div class="panel panel-default" style="height: 770px;">
-                <div class="panel-heading">
-                    <h1 class="panel-title">Viewer</h1>
-                </div>
                 <div class="panel-body">
                     <div class="col-xs-4" style="padding: 0px;">
                         <div class="panel panel-default side-panel" style="margin-bottom: 0px; height: 700px;">

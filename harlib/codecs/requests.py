@@ -21,6 +21,7 @@ except ImportError:
     from ordereddict import OrderedDict
 
 KEEP_SIZE = False
+DEFAULT_VERSION = 'HTTP/0'
 
 def from_pair(x):
     return x[0] + ': ' + x[1]
@@ -95,7 +96,10 @@ class Urllib3Codec(object):
         har = self.dict_class()
         har['status'] = raw.status
         har['statusText'] = raw.reason
-        har['httpVersion'] = harlib.utils.render_http_version(raw.version)
+        try:
+            har['httpVersion'] = harlib.utils.render_http_version(raw.version)
+        except:
+            har['httpVersion'] = DEFAULT_VERSION
 
         har['headers'] = list(raw.headers.items())
         har['cookies'] = []
@@ -184,7 +188,8 @@ class RequestsCodec(object):
         assert raw_class.__module__ in self.modules
         raw_type = raw_class.__name__
         har_type = har.__class__.__name__
-        return getattr(self, 'encode_%s_to_%s' % (har_type, raw_type))(har)
+        method_name = 'encode_%s_to_%s' % (har_type, raw_type)
+        return getattr(self, method_name)(har)
 
 
     def encode_HarEntry_to_Response(self, har):
@@ -293,7 +298,10 @@ class RequestsCodec(object):
         har['cache'] = {}
         har['timings'] = self.decode_HarTimings_from_Response(raw)
         har['connection'] = ''
-        har['_clientOptions'] = self.decode_HarClientOptions_from_Response(raw)
+        try:
+            har['_clientOptions'] = self.decode_HarClientOptions_from_Response(raw)
+        except:
+            pass
         return har
 
     def decode_HarClientOptions_from_Response(self, raw):
@@ -321,7 +329,10 @@ class RequestsCodec(object):
         har = self.dict_class()
         har['status'] = raw.status_code
         har['statusText'] = raw.reason
-        har['httpVersion'] = harlib.utils.render_http_version(raw.raw.version)
+        try:
+            har['httpVersion'] = harlib.utils.render_http_version(raw.raw.version)
+        except:
+            har['httpVersion'] = DEFAULT_VERSION
 
         har['headers'] = list(raw.headers.lower_items())
         har['cookies'] = list(raw.cookies.items()) if raw.cookies else []

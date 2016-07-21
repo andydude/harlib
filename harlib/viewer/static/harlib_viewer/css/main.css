@@ -47,3 +47,36 @@ dd > * {
     from { -webkit-transform: rotate(0deg); }
     to { -webkit-transform: rotate(360deg); }
 }
+
+.navbar-inverse.navbar-oneticket {
+    background-image: none;
+    background-color: #2454A5;
+    font-size: 150%;
+    text-shadow: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-header .navbar-brand {
+    height: auto;
+    max-height: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-collapse .navbar-brand {
+    color: white;
+    font-size: 150%;
+    font-weight: bold;
+    text-shadow: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-collapse .nav.navbar-nav {
+    padding-top: 30px;
+    text-shadow: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-collapse .nav.navbar-nav a{
+    color: white;
+}
+
+.panel.panel-primary .panel-heading {
+    background-image: none;
+    background-color: #2454A5;
+}
