@@ -9,12 +9,14 @@
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from requests.packages import urllib3 as urllib3r
-import requests
-import urllib3
 import harlib
+import json
+import requests
 import six
+import urllib3
+from datetime import datetime
 from six.moves import http_client
-from .httplib import HttplibCodec
+from harlib.codecs.httplib import HttplibCodec
 try:
     from collections import OrderedDict
 except ImportError:
@@ -22,6 +24,21 @@ except ImportError:
 
 KEEP_SIZE = False
 DEFAULT_VERSION = 'HTTP/0'
+
+def separate(iterable):
+    first = True
+    last = False
+    try:
+        length = len(iterable)
+    except:
+        length = len(list(iterable))
+    separated = []
+    for index, value in enumerate(iterable):
+        if index == length - 1:
+            last = True
+        separated.append((first, last, value))
+        first = False
+    return separated
 
 def from_pair(x):
     return x[0] + ': ' + x[1]
@@ -170,6 +187,21 @@ class Urllib3Codec(object):
     #
     #def decode_HarPostDataParam_from_tuple(self, raw):
     #    pass
+
+
+    ##########################################################################################
+    ## Serialization
+
+    def serialize_from_HTTPResponse(self, io, raw):
+        # raw.status
+        # raw.reason
+        # raw.version
+        # raw.headers.items()
+        # raw.data
+        pass
+
+    ##########################################################################################
+    ## TODO: Deserialization
 
 class RequestsCodec(object):
 
@@ -490,3 +522,238 @@ class RequestsCodec(object):
             return []
 
     decode_HarRequest_from_PreparedRequest = decode_HarRequest_from_Request
+
+    ##########################################################################################
+    ## Serialization
+
+    def serialize(self, io, raw, har_class):
+        if raw is None:
+            return
+        assert raw.__class__.__module__ in self.modules
+        method_name = 'serialize_%s_from_%s' % (
+            har_class.__name__, raw.__class__.__name__)
+        if isinstance(raw, Exception):
+            method_name = 'serialize_%s_from_%s' % (
+                har_class.__name__, Exception.__name__)
+        return getattr(self, method_name)(io, raw)
+
+    def serialize_HarHeader_from_tuple(self, io, raw):
+        io.write('\t\t{')
+        io.write('"name": "' + six.binary_type(raw[0]) + '", ')
+        io.write('"value": "' + six.binary_type(raw[1]) + '"')
+        io.write('}') # newline handled by separate()
+
+    def serialize_HarRequest_from_PreparedRequest(self, io, raw):
+        # raw is a PreparedRequest
+        # raw.url
+        # raw.headers
+        # raw.headers.lower_items
+        # raw._cookies
+        # raw.body
+
+        # raw is a Request
+        # raw.status
+        # raw.params.items()
+        # raw.data
+        # raw.files
+        # raw.json?
+        # raw.json
+        # raw.headers.items
+        # raw.cookies
+
+        # usually 4 tabs, omitted
+        io.write('"request": {\n')
+        io.write('\t"method": "' + six.binary_type(raw.method) + '",\n')
+        io.write('\t"url": "' + six.binary_type(raw.url) + '",\n')
+        io.write('\t"httpVersion": "HTTP/1.1",\n')
+        io.write('\t"cookies": [\n')
+        io.write('\t],\n')
+        io.write('\t"headers": [\n')
+
+        if isinstance(raw, requests.models.Request):
+            cookies = list(raw.cookies.items()) if raw.cookies else []
+            headers = list(raw.headers.items())
+        elif isinstance(raw, requests.models.PreparedRequest):
+            cookies = list(raw._cookies.items()) if raw._cookies else []
+            headers = list(raw.headers.lower_items())
+        else:
+            cookies = []
+            headers = []
+        for _, last, header in separate(headers):
+            try:
+                self.serialize_HarHeader_from_tuple(io, (header[0].title(), header[1]))
+            except Exception as err:
+                print(repr(err))
+            if last:
+                io.write('\n')
+            else:
+                io.write(',\n')
+
+        io.write('\t],\n')
+        io.write('\t"queryString": [\n')
+        io.write('\t],\n')
+        io.write('\t"postData": {\n')
+        io.write('\t\t"mimeType": "' + six.binary_type(raw.headers.get('content-type')) + '",\n')
+        io.write('\t\t"size": -1,\n')
+        io.write('\t\t"text": ""\n')
+        io.write('\t},\n')
+        io.write('\t"headersSize": -1,\n')
+        io.write('\t"bodySize": -1\n')
+        io.write('},\n')
+
+    serialize_HarRequest_from_Request = serialize_HarRequest_from_PreparedRequest
+
+    def get_EnvironmentError_from_Exception(self, raw):
+
+        if isinstance(raw, requests.exceptions.ConnectionError):
+            suberr = self.get_EnvironmentError_from_Exception(raw.message)
+            errno = suberr.errno
+            strerror = suberr.strerror
+            filename = suberr.filename
+            return EnvironmentError(errno, strerror, filename)
+        elif isinstance(raw, requests.packages.urllib3.exceptions.MaxRetryError):
+            suberr = self.get_EnvironmentError_from_Exception(raw.reason)
+            errno = suberr.errno
+            strerror = suberr.strerror
+            filename = raw.url
+            return EnvironmentError(errno, strerror, filename)
+        elif isinstance(raw, requests.packages.urllib3.exceptions.NewConnectionError):
+            assert isinstance(raw.message, six.string_types)
+            if 'Failed to establish a new connection: ' in raw.message:
+                import re
+                _, env_str = raw.message.split('Failed to establish a new connection: ', 1)
+                env_re = re.compile('\[Errno (?P<errno>\d{0,6})\] (?P<strerror>.*)')
+                match = env_re.match(env_str)
+                errno = match.group('errno')
+                strerror = match.group('strerror')
+                filename = ''
+            else:
+                errno = 'UNKNOWN'
+                strerror = 'UNKNOWN'
+                filename = ''
+            return EnvironmentError(errno, strerror, filename)
+        else:
+            print(0, repr(raw))
+            print(1, repr(raw.args))
+            print(2, repr(vars(raw)))
+        #while not isinstance(raw, six.string_types):
+        #    raw = raw.message
+
+    def serialize_HarResponse_from_Exception(self, io, raw):
+        err = self.get_EnvironmentError_from_Exception(raw)
+
+        # usually 4 tabs, omitted
+        io.write('"response": {\n')
+        io.write('\t"status": ' + six.binary_type(err.errno) + ',\n')
+        io.write('\t"statusText": "' + six.binary_type(err.strerror) + '",\n')
+        io.write('\t"httpVersion": "HTTP/1.1",\n')
+        io.write('\t"cookies": [\n')
+        io.write('\t],\n')
+        io.write('\t"headers": [\n')
+        io.write('\t],\n')
+        io.write('\t"content": {\n')
+        io.write('\t\t"mimeType": "application/x-error",\n')
+        io.write('\t\t"size": -1,\n')
+        io.write('\t\t"text": ')
+        io.write(six.binary_type(json.dumps(repr(raw))))
+        io.write('\n\t},\n')
+
+        io.write('\t"redirectURL": "' + six.binary_type(err.filename) + '",\n')
+        io.write('\t"headersSize": -1,\n')
+        io.write('\t"bodySize": -1\n')
+        io.write('},\n')
+
+    def serialize_HarResponse_from_Response(self, io, raw):
+        # raw.status_code
+        # raw.reason
+        # raw.raw.version
+        # raw.headers.lower_items()
+        # raw.url
+        # raw.history
+        # raw.elapsed
+        # raw.request
+        # raw.encoding
+        # raw.request.url
+
+        # usually 4 tabs, omitted
+        io.write('"response": {\n')
+        io.write('\t"status": ' + six.binary_type(raw.status_code) + ',\n')
+        io.write('\t"statusText": "' + six.binary_type(raw.reason) + '",\n')
+        io.write('\t"httpVersion": "HTTP/1.1",\n')
+        io.write('\t"cookies": [\n')
+        io.write('\t],\n')
+        io.write('\t"headers": [\n')
+
+        for _, last, header in separate(list(raw.headers.lower_items())):
+            self.serialize_HarHeader_from_tuple(io, (header[0].title(), header[1]))
+            if last:
+                io.write('\n')
+            else:
+                io.write(',\n')
+
+        io.write('\t],\n')
+        io.write('\t"content": {\n')
+        io.write('\t\t"mimeType": "' + six.binary_type(raw.headers.get('content-type')) + '",\n')
+        io.write('\t\t"size": -1,\n')
+        io.write('\t\t"text": ')
+        io.write(six.binary_type(json.dumps(raw.content)))
+        io.write('\n\t},\n')
+
+        io.write('\t"redirectURL": "",\n')
+        io.write('\t"headersSize": -1,\n')
+        io.write('\t"bodySize": -1\n')
+        io.write('},\n')
+        pass
+
+    def serialize_HarTimings_from_Response(self, io, raw):
+        total = raw.elapsed.total_seconds()*1000.0
+        # usually 4 tabs, omitted
+        io.write('"timings": {\n')
+        io.write('\t"send": -1,\n')
+        io.write('\t"wait": ' + six.binary_type(total) + ',\n')
+        io.write('\t"receive": -1\n')
+        io.write('},\n')
+
+
+    def serialize_HarEntry_from_Response(self, io, raw):
+        started = datetime.now().isoformat()
+        try:
+            total = raw.elapsed.total_seconds()*1000.0
+        except:
+            total = 0
+
+        # usually 3 tabs, omitted
+        io.write('{\n')
+        io.write('"startedDateTime": "' + six.binary_type(started) + '",\n')
+        io.write('"time": "' + six.binary_type(total) + '",\n')
+        self.serialize_HarRequest_from_PreparedRequest(io, raw.request)
+        if hasattr(raw, '_error'):
+            self.serialize_HarResponse_from_Exception(io, raw._error)
+        else:
+            self.serialize_HarResponse_from_Response(io, raw)
+            self.serialize_HarTimings_from_Response(io, raw)
+        io.write('"cache": {}\n')
+        io.write('}') # newline handled by separate()
+
+    def serialize_HarLog_from_Responses(self, io, raws):
+        from harlib import __version__
+        io.write('{\n\t"log": {\n')
+        io.write('\t\t"version": "1.2",\n')
+        io.write('\t\t"creator": {\n')
+        io.write('\t\t\t"name": "harlib",\n')
+        io.write('\t\t\t"version": "' + six.binary_type(__version__) + '"\n')
+        io.write('\t\t},\n')
+        io.write('\t\t"entries": [\n')
+
+        for _, last, raw in separate(list(raws)):
+            self.serialize_HarEntry_from_Response(io, raw)
+            if last:
+                io.write('\n')
+            else:
+                io.write(',\n')
+
+        io.write('\t\t]\n')
+        io.write('\t}\n}\n')
+
+    ##########################################################################################
+    ## TODO: Deserialization

@@ -323,5 +323,9 @@ $(function(){
         window.forceDownloadFile(filename, content, contentType);
     };
 
+    if (window.location.hash) {
+        $(window.location.hash + '-tab a').click();
+    }
+
     //window.onInputHarFile(gHarFile);
 });

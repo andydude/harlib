@@ -19,10 +19,8 @@ if __name__ == '__main__':
     setup_config = json.load(open("package.json"))
     setup(
         long_description = open('README.md').read(),
-        install_requires = open("requires.txt").readlines(),
+        install_requires = open("requirements.txt").readlines(),
         packages = find_packages(),
-        download_url = harlib.__download_url__,
-        url = harlib.__homepage_url__,
         version = harlib.__version__,
         **setup_config
     )

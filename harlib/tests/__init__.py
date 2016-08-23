@@ -20,6 +20,8 @@ except ImportError as err:
 
 try:
     from . import requests
+    from . import requests_misc
+    from . import requests_ser
 except ImportError as err:
     print(repr(err))
 

@@ -19,7 +19,7 @@ import socket
 import unittest
 
 from six.moves import http_client
-from .utils import TestUtils
+from harlib.tests.utils import TestUtils
 
 class TestHttplibHTTPResponse(TestUtils):
 

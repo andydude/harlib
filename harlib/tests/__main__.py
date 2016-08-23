@@ -11,11 +11,12 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-from .django import *
-from .requests import *
-from .httplib import *
-from .urllib2 import *
-from .urllib3 import *
+import harlib.tests
+from harlib.tests.django import *
+from harlib.tests.requests import *
+from harlib.tests.httplib import *
+from harlib.tests.urllib2 import *
+from harlib.tests.urllib3 import *
 
 import unittest
 unittest.main(verbosity=2)
