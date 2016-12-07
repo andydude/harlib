@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import harlib.api
+import argparse
+import logging
+logger = logging.getLogger('harmerge')
+
+def add_arguments(parser):
+    parser.add_argument('files', default=[], nargs='+')
+    return parser
+
+def handle(*args, **options):
+    files = options.get('files', [])
+    output = None
+    try:
+        with open(files[0]) as reader:
+            output = harlib.api.loads(reader.read())
+    except Exception as err:
+        logging.error("%s while reading %s" % (repr(err), filename), exc_info=True)
+    if not output:
+        raise ValueError
+    for filename in files[1:]:
+        har_file = None
+        try:
+            with open(filename) as reader:
+                har_file = harlib.api.loads(reader.read())
+        except Exception as err:
+            logging.error("%s while reading %s" % (repr(err), filename), exc_info=True)
+        if har_file:
+            print(type(har_file))
+            if har_file.log:
+                print(type(har_file.log))
+                if har_file.log.entries:
+                    print(type(har_file.log.entries))
+                    output.log.entries += har_file.log.entries
+    print(harlib.api.dumps(output))
+            
+
+def main():
+    logging.basicConfig(filename='/dev/stdout', level=logging.DEBUG)
+    parser = add_arguments(argparse.ArgumentParser())
+    options = parser.parse_args(sys.argv[1:])
+    sys.exit(handle(**vars(options)))
+
+if __name__ == '__main__':
+    main()
