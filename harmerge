@@ -37,7 +37,7 @@ def handle(*args, **options):
                     print(type(har_file.log.entries))
                     output.log.entries += har_file.log.entries
     print(harlib.api.dumps(output))
-            
+
 
 def main():
     logging.basicConfig(filename='/dev/stdout', level=logging.DEBUG)
