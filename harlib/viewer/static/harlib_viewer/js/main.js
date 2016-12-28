@@ -263,9 +263,14 @@ $(function(){
         var $tag = $('#local-file')[0];
         var reader = new FileReader();
         reader.onload = function(event) {
-            var text = event.target.result
-            window.gHarFile = JSON.parse(text);
-            window.onInputHarFile(window.gHarFile);
+            try {
+                var text = event.target.result
+                window.gHarFile = JSON.parse(text);
+                window.onInputHarFile(window.gHarFile);
+            } catch (errorThrown) {
+                // This works in chrome and firefox
+                window.alert(errorThrown);
+            }
         };
         reader.readAsText($tag.files[0]);
     };
