@@ -133,7 +133,8 @@
             {{{params request.postData.params}}}
         </script>
 
-        <script id="request-tab-template" type="text/x-handlebars-template">
+        <script id="posttext-tab-template" type="text/x-handlebars-template">
+            {{!-- function( entry ) --}}
             <pre style="height: 625px; overflow: scroll;">{{request.postData.text}}</pre>
         </script>
 
@@ -279,8 +280,8 @@
                                     <li id="cookies-tab"><a href="#cookies" role="tab" data-toggle="tab">Cookies</a></li>
                                     <li id="params-tab"><a href="#params" role="tab" data-toggle="tab">Params</a></li>
                                     <li id="postData-tab"><a href="#postData" role="tab" data-toggle="tab">PostData</a></li>
+                                    <li id="postText-tab"><a href="#postText" role="tab" data-toggle="tab">PostText</a></li>
                                     <li id="response-tab"><a href="#response" role="tab" data-toggle="tab">Response</a></li>
-                                    <!--li id="preview-tab"><a href="#preview" role="tab" data-toggle="tab">Preview</a></li-->
                                     <li id="timing-tab"><a href="#timing" role="tab" data-toggle="tab">Timing</a></li>
                                     <li id="options-tab" class="hidden"><a href="#options" role="tab" data-toggle="tab">Options</a></li>
                                     <li id="exports-tab"><a href="#exports" role="tab" data-toggle="tab">Exports</a></li>
@@ -290,8 +291,8 @@
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="cookies"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="params"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="postData"></div>
+                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="postText"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="response"></div>
-                                    <div class="tab-pane" style="height: 635px; overflow: scroll;" id="preview"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="timing"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="options"></div>
                                     <div class="tab-pane" style="height: 635px; overflow: scroll;" id="exports"></div>

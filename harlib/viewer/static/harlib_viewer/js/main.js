@@ -41,6 +41,8 @@ $(function(){
 
     var postDataTabTemplate = Handlebars.compile($('#postdata-tab-template').html());
 
+    var postTextTabTemplate = Handlebars.compile($('#posttext-tab-template').html());
+
     var responseTabTemplate = Handlebars.compile($('#response-tab-template').html());
 
     Handlebars.registerHelper('times', function(obj, options) {
@@ -126,6 +128,14 @@ $(function(){
         return true;
     };
 
+    window.hasPostText = function (entry) {
+        if (!entry) return false;
+        if (!entry.request) return false;
+        if (!entry.request.postData) return false;
+        if (!entry.request.postData.text) return false;
+        return true;
+    };
+
     window.hasContent = function (entry) {
         if (!entry) return false;
         if (!entry.response) return false;
@@ -189,6 +199,7 @@ $(function(){
         $('#cookies')	.html(cookiesTabTemplate(entry));
         $('#params')	.html(paramsTabTemplate(entry));
         $('#postData')	.html(postDataTabTemplate(entry));
+        $('#postText')	.html(postTextTabTemplate(entry));
         $('#response')	.html(responseTabTemplate(entry));
         $('#timing')	.html(timingsTabTemplate(entry));
         $('#options')	.html(optionsTabTemplate(entry));
@@ -214,6 +225,10 @@ $(function(){
 
         if (!(hasPostData(entry))) {
             $('#postData-tab').addClass('hidden');
+        }
+
+        if (!(hasPostText(entry))) {
+            $('#postText-tab').addClass('hidden');
         }
 
         if (!(hasContent(entry))) {
