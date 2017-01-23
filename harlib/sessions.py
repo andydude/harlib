@@ -69,9 +69,8 @@ class HarSessionMixin(object):
             logging_level = logging.DEBUG
         nentries = len(self._entries)
         if self._filename and self._entries:
-
             # add metadata
-            if not extra is None:
+            if extra is not None:
                 if isinstance(extra, dict):
                     extra_data = extra
                 else:
@@ -103,6 +102,7 @@ class HarSessionMixin(object):
                             previous_filename = ch.read()
                         if os.path.exists(previous_filename):
                             logger.debug('found match cache file')
+                            logger.info('%d cached responses in %s' % (nentries, previous_filename,), extra=extra)
                             return previous_filename
                 # write file
                 with open(self._filename, 'w') as f:
