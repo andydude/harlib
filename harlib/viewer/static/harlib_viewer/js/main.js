@@ -312,8 +312,33 @@ $(function(){
         document.body.removeChild(element);
     };
 
+    window.onExportRawAsTxt = function (tag, event) {
+        var contentType = 'text/plain;charset=utf-8';
+        var content = window.gHarEntry.response.content.text;
+        var filename = '1ticket-harlib-viewer.response';
+
+        if (!content.length) {
+            // pass
+        } else if (content.trim()[0] == '%') {
+            contentType = 'application/pdf';
+            filename += '.pdf';
+        } else if (content.trim()[0] == '<') {
+            contentType = 'text/html;charset=utf-8';
+            filename += '.html';
+        } else if (content.trim()[0] == '[') {
+            contentType = 'application/json;charset=utf-8';
+            filename += '.json';
+        } else if (content.trim()[0] == '{') {
+            contentType = 'application/json;charset=utf-8';
+            filename += '.json';
+        } else {
+            filename += '.txt';
+        }
+        window.forceDownloadFile(filename, content, contentType);
+    };
+
     window.onExportAsTxt = function (tag, event) {
-        var filename = '1ticket-harlib-viewer.txt';
+        var filename = '1ticket-harlib-viewer.research.txt';
         var contentType = 'text/plain;charset=utf-8';
         var content = 'TODO';
         window.forceDownloadFile(filename, content, contentType);
