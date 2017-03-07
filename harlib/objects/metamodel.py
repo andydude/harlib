@@ -62,19 +62,10 @@ class HarObject(MetaObject):
         raise ValueError("%s could not be encoded" % raw_class)
 
     def serialize(self, io, raw):
-        mod = raw.__class__.__module__
-        for codec in self._codecs:
-            if mod in codec.modules:
-                har = codec.serialize(io, raw, self.__class__)
-                return har
-        raise ValueError("%s could not be serialized" % raw.__class__)
+        codec = harlib.codecs.requests.RequestsCodec()
+        codec.serialize(io, raw, self.__class__)
 
-    def unserialize(self, io, raw):
-        mod = raw.__class__.__module__
-        for codec in self._codecs:
-            if mod in codec.modules:
-                har = codec.unserialize(io, raw, self.__class__)
-                return har
+    def unserialize(self, io):
         raise ValueError("%s could not be unserialized" % raw.__class__)
 
 def initialize_codecs():

@@ -309,7 +309,7 @@ $(function(){
 
         element.click();
 
-        document.body.removeChild(element);
+        //document.body.removeChild(element);
     };
 
     window.onExportRawAsTxt = function (tag, event) {

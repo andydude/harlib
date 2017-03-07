@@ -64,7 +64,7 @@ class HarSessionMixin(object):
     def clear(self):
         self._entries = []
 
-    def dump(self, with_content=False, logging_level=None, extra=None, cache=True, **kwargs):
+    def dump(self, with_content=False, logging_level=None, extra=None, cache=True, with_io=False, **kwargs):
         if logging_level is None:
             logging_level = logging.DEBUG
         nentries = len(self._entries)
