@@ -300,6 +300,14 @@ $(function(){
         var datetime = (new Date()).toISOString().replace(/:/g, '-').replace(/T/g, '-').split('.')[0];
         filename = datetime + '-' + filename;
 
+        var blob = new Blob([content], {type: contentType});
+        saveAs(blob, filename);
+    };
+
+    window.forceDownloadFileOld = function (filename, content, contentType) {
+        var datetime = (new Date()).toISOString().replace(/:/g, '-').replace(/T/g, '-').split('.')[0];
+        filename = datetime + '-' + filename;
+
         var element = document.createElement('a');
         element.setAttribute('href', 'data:' + contentType + ',' + encodeURIComponent(content));
         element.setAttribute('download', filename);
@@ -309,7 +317,7 @@ $(function(){
 
         element.click();
 
-        //document.body.removeChild(element);
+        document.body.removeChild(element);
     };
 
     window.onExportRawAsTxt = function (tag, event) {
