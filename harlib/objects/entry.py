@@ -197,13 +197,15 @@ class HarEntry(HarObject):
             har = obj
         elif isinstance(obj, HarObject):
             har = obj.to_json()
-        elif isinstance(obj, (bytes, str, unicode, list, tuple)):
+        elif isinstance(obj, six.string_types):
+            raise ValueError('HarEntry got %s' % repr(obj))
+        elif isinstance(obj, (list, tuple)):
             raise ValueError('HarEntry got %s' % repr(obj))
         else:
             har = self.decode(obj)
 
         if isinstance(har, Mapping):
-            if not har.has_key('startedDateTime'):
+            if 'startedDateTime' not in har:
                 har['startedDateTime'] = None
             if not har['startedDateTime']:
                 har['startedDateTime'] = self.get_started_datetime(obj)
@@ -256,7 +258,7 @@ class HarEntry(HarObject):
     #def to_requests(self):
     #    return self.encode(requests.Response)
 
-    def to_json(self, with_content=True):
+    def to_json(self, with_content=True, dict_class=dict):
         d = super(HarEntry, self).to_json()
         if not with_content:
             try:

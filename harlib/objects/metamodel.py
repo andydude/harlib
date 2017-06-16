@@ -42,7 +42,7 @@ class HarObject(MetaObject):
         # we want to see private attributes as well
         return self._changed_items()
 
-    def to_json(self, dict_class=OrderedDict):
+    def to_json(self, dict_class=OrderedDict, with_content=True):
         return super(HarObject, self).to_json(dict_class=dict_class)
 
     def decode(self, raw):

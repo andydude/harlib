@@ -112,8 +112,10 @@ class HarSessionMixin(object):
                         cf.write(self._filename)
 
             except (IOError, OSError) as err:
+                pass
                 logger.warning('%s %s' % (type(err), repr(err)))
             except Exception as err:
+                pass
                 logger.error('%s %s' % (type(err), repr(err)), exc_info=True)
 
         VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV')
@@ -172,16 +174,16 @@ class HarSessionMixin(object):
             content_without_reponse_text += entry.request.url
             try:
                 content_without_reponse_text += str(entry.request.postData.text)
-            except Exception:
+            except Exception as err:
                 pass
             try:
                 content_without_reponse_text += str(entry.request.headers)
-            except Exception:
+            except Exception as err:
                 pass
             content_without_reponse_text += str(entry.response.status)
             try:
                 content_without_reponse_text += str(entry.response.content.encoding)
-            except AttributeError:
+            except AttributeError as err:
                 pass
             content = content_without_reponse_text
             try:
@@ -189,12 +191,14 @@ class HarSessionMixin(object):
                     content += entry.response.content.text.encode('latin1', 'ignore')
                 else:
                     content += entry.response.content.text
-            except AttributeError:
+            except AttributeError as err:
                 pass
-            except UnicodeEncodeError as ex:
-                logger.warning('UnicodeEncodeError computing text for hash: %s' % ex)
-            except Exception as ex:
-                logger.warning('Exception computing text for hash: %s %s' % (type(ex), ex,))
+            except UnicodeEncodeError as err:
+                pass
+                logger.warning('UnicodeEncodeError computing text for hash: %s' % err)
+            except Exception as err:
+                pass
+                logger.warning('Exception computing text for hash: %s %s' % (type(err), err,))
         sha_hash = hashlib.new('sha1')
         try:
             if isinstance(content, unicode):
