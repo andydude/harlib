@@ -1,6 +1,6 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import url
+from . import views
 
-urlpatterns = patterns(
-    'harlib.viewer.views',
-    url(r'^$', 'index'),
-)
+urlpatterns = [
+    url(r'^$', views.index),
+]
