@@ -47,7 +47,9 @@ class Urllib3Codec(object):
 
     dict_class = dict
     response_class = urllib3r.response.HTTPResponse
-    modules = ['urllib3.response', 'requests.packages.urllib3.response']
+    modules = ['urllib3.response',
+               'requests.packages.urllib3.response',
+               'botocore.vendored.requests.packages.urllib3.response']
     httplib_codec = HttplibCodec()
 
     def __init__(self):
@@ -207,7 +209,9 @@ class RequestsCodec(object):
 
     dict_class = dict
     response_class = requests.Response
-    modules = ['requests.models', 'one.web.http.objects']
+    modules = ['requests.models',
+               'botocore.vendored.requests.models',
+               'one.web.http.objects']
     urllib3_codec = Urllib3Codec()
 
     def __init__(self):
