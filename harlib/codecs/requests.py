@@ -241,8 +241,8 @@ class RequestsCodec(object):
         ResponseCls = requests.Response
         HeadersCls = requests.structures.CaseInsensitiveDict
         CookiesCls = requests.cookies.RequestsCookieJar
-        headers = map(lambda x: x.to_requests(), har.headers)
-        cookies = map(lambda x: x.to_requests(), har.cookies)
+        headers = list(map(lambda x: x.to_requests(), har.headers))
+        cookies = list(map(lambda x: x.to_requests(), har.cookies))
 
         resp = ResponseCls()
         resp._content = har.content.text
@@ -263,8 +263,8 @@ class RequestsCodec(object):
         RequestCls = requests.models.Request
         HeadersCls = dict
         CookiesCls = dict
-        headers = map(lambda x: x.to_requests(), har.headers)
-        cookies = map(lambda x: x.to_requests(), har.cookies)
+        headers = list(map(lambda x: x.to_requests(), har.headers))
+        cookies = list(map(lambda x: x.to_requests(), har.cookies))
 
         req = RequestCls(method = har.method, url = har.url)
         req.headers = HeadersCls(headers)
@@ -283,8 +283,8 @@ class RequestsCodec(object):
         RequestCls = requests.models.PreparedRequest
         HeadersCls = dict
         CookiesCls = requests.cookies.RequestsCookieJar
-        headers = map(lambda x: x.to_requests(), har.headers) or []
-        cookies = map(lambda x: x.to_requests(), har.cookies) or []
+        headers = list(map(lambda x: x.to_requests(), har.headers)) or []
+        cookies = list(map(lambda x: x.to_requests(), har.cookies)) or []
 
         preq = RequestCls()
         preq.method = har.method
@@ -516,7 +516,7 @@ class RequestsCodec(object):
             raise ValueError
 
     def decode_HarQueryStringParams_from_Request(self, raw):
-        return map(harlib.utils.dict_from_pair, raw.params.items())
+        return list(map(harlib.utils.dict_from_pair, raw.params.items()))
 
     def decode_HarQueryStringParams_from_PreparedRequest(self, raw):
         try:
@@ -637,11 +637,7 @@ class RequestsCodec(object):
                 filename = ''
             return EnvironmentError(errno, strerror, filename)
         else:
-            print(0, repr(raw))
-            print(1, repr(raw.args))
-            print(2, repr(vars(raw)))
-        #while not isinstance(raw, six.string_types):
-        #    raw = raw.message
+            print("unknown error in requests decoder")
 
     def serialize_HarResponse_from_Exception(self, io, raw):
         err = self.get_EnvironmentError_from_Exception(raw)

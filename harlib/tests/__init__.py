@@ -11,32 +11,3 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-
-
-try:
-    from . import httplib
-except ImportError as err:
-    print(repr(err))
-
-try:
-    from . import requests
-    from . import requests_misc
-    from . import requests_ser
-except ImportError as err:
-    print(repr(err))
-
-try:
-    from . import django
-except ImportError as err:
-    print(repr(err))
-
-
-try:
-    from . import urllib2
-except ImportError as err:
-    print(repr(err))
-
-try:
-    from . import urllib3
-except ImportError as err:
-    print(repr(err))

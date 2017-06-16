@@ -14,7 +14,8 @@ import harlib
 class DefaultCodec(object):
 
     dict_class = dict
-    modules = ['__builtin__']
+    modules = ['__builtin__',  # PY2
+               'builtins']     # PY3
 
     def __init__(self):
         pass
@@ -63,7 +64,7 @@ class DefaultCodec(object):
             har['fileName'] = obj[0]
             har['contentType'] = obj[2]
             if hasattr(obj[3], 'items'):
-                har['_headers'] = map(HarHeader, obj[3].items())
+                har['_headers'] = list(map(HarHeader, obj[3].items()))
         else:
             pass
 
