@@ -113,7 +113,7 @@ class TestUtils(unittest.TestCase):
         #if len(headers) != len(headers2): return
         #keys = utils.dict_sortedkeys(headers)
         #keys2 = utils.dict_sortedkeys(headers2)
-        #for i in xrange(len(headers)):
+        #for i in six.moves.range(len(headers)):
 
     def assertEqualHeaders(self, headers, headers2, msg=None):
         self.assertEqual(headers.__class__, headers2.__class__, msg)
@@ -121,7 +121,7 @@ class TestUtils(unittest.TestCase):
         if len(headers) != len(headers2): return
         keys = sorted(headers.keys())
         keys2 = sorted(headers2.keys())
-        for i in xrange(len(headers)):
+        for i in six.moves.range(len(headers)):
             self.assertEqual(keys[i].lower(), keys2[i].lower(), msg)
             self.assertEqual(headers[keys[i]], headers2[keys2[i]], msg)
             self.assertEqual(headers[keys[i]].__class__, headers2[keys2[i]].__class__, msg)
@@ -130,5 +130,5 @@ class TestUtils(unittest.TestCase):
     def assertEqualHistory(self, history, history2, msg=None):
         self.assertEqual(len(history), len(history2), msg)
         if len(history) != len(history2): return
-        for i in xrange(len(history)):
+        for i in six.moves.range(len(history)):
             self.assertEqualPreparedRequest(history[i], history2[i], msg)

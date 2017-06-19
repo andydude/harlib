@@ -244,8 +244,12 @@ class RequestsCodec(object):
         headers = list(map(lambda x: x.to_requests(), har.headers))
         cookies = list(map(lambda x: x.to_requests(), har.cookies))
 
+        content = har.content.text
+        if isinstance(content, six.text_type):
+            content = content.encode('utf-8')
+
         resp = ResponseCls()
-        resp._content = har.content.text
+        resp._content = content
         resp._content_consumed = True
         resp.status_code = har.status
         resp.reason = har.statusText
