@@ -12,6 +12,7 @@ import logging
 import os
 import requests
 import hashlib
+import six
 from harlib.codecs.requests import RequestsCodec
 from . import objects, utils
 try:
@@ -187,7 +188,7 @@ class HarSessionMixin(object):
                 pass
             content = content_without_reponse_text
             try:
-                if isinstance(entry.response.content.text, unicode):
+                if isinstance(entry.response.content.text, six.text_type):
                     content += entry.response.content.text.encode('latin1', 'ignore')
                 else:
                     content += entry.response.content.text
@@ -201,7 +202,7 @@ class HarSessionMixin(object):
                 logger.warning('Exception computing text for hash: %s %s' % (type(err), err,))
         sha_hash = hashlib.new('sha1')
         try:
-            if isinstance(content, unicode):
+            if isinstance(content, six.text_type):
                 sha_hash.update(content.encode('latin1', 'ignore'))
             else:
                 sha_hash.update(content)

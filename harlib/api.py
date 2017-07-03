@@ -10,6 +10,7 @@
 from __future__ import absolute_import
 from .objects import HarObject, HarFile, HarLog, HarEntry, HarResponse, HarRequest
 import collections, json
+import six
 
 def dump(o, f):
     assert(isinstance(o, HarObject))
@@ -40,7 +41,7 @@ def loadd(d):
         raise ValueError("unrecognized HAR content", d)
 
 def loads(s):
-    assert(isinstance(s, (bytes, str, unicode)))
+    assert(isinstance(s, six.string_types))
     d = json.loads(s)
     return loadd(d)
 
