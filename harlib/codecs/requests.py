@@ -166,31 +166,6 @@ class Urllib3Codec(object):
     def decode_HarRequestBody_from_HTTPResponse(self, raw):
         return {'mimeType': 'UNKNOWN'}
 
-    #def decode_HarPostDataParam_from_RequestField(self, raw, name=None):
-    #if isinstance(obj, urllib3.fields.RequestField):
-    #    har['value'] = obj.data
-    #    har['fileName'] = obj._filename
-    #    har['contentType'] = obj.headers.get('content-type')
-    #    if hasattr(obj, 'headers'):
-    #        if isinstance(obj.headers, Mapping):
-    #            har['_headers'] = map(HarHeader, obj.headers.items())
-
-    #    d = dict()
-    #    if name:
-    #        d['name'] = name
-    #    else:
-    #        d['name'] = raw[0]
-    #        raw = raw[1:]
-    #
-    #    pass
-    #
-    #def decode_HarPostDataParam_from_RequestField(self, raw):
-    #    pass
-    #
-    #def decode_HarPostDataParam_from_tuple(self, raw):
-    #    pass
-
-
     ##########################################################################################
     ## Serialization
 
@@ -210,6 +185,7 @@ class RequestsCodec(object):
     dict_class = dict
     response_class = requests.Response
     modules = ['requests.models',
+               'botocore.awsrequest',
                'botocore.vendored.requests.models',
                'one.web.http.objects']
     urllib3_codec = Urllib3Codec()
@@ -227,6 +203,8 @@ class RequestsCodec(object):
         method_name = 'encode_%s_to_%s' % (har_type, raw_type)
         return getattr(self, method_name)(har)
 
+    def encode_HarEntry_to_Request(self, har):
+        return self.encode_HarRequest_to_Request(self, har.request)
 
     def encode_HarEntry_to_Response(self, har):
         from datetime import timedelta
@@ -427,10 +405,10 @@ class RequestsCodec(object):
         har['url'] = raw.url
         har['httpVersion'] = 'HTTP/1.1' # requests uses this default
 
-        if isinstance(raw, requests.models.Request):
+        if raw.__class__.__name__ in ['Request', 'AWSRequest']:
             har['headers'] = list(raw.headers.items())
             har['cookies'] = list(raw.cookies.items()) if raw.cookies else []
-        elif isinstance(raw, requests.models.PreparedRequest):
+        elif raw.__class__.__name__ in ['PreparedRequest', 'AWSPreparedRequest']:
             har['headers'] = list(raw.headers.lower_items())
             har['cookies'] = list(raw._cookies.items()) if raw._cookies else []
         else:
@@ -455,17 +433,19 @@ class RequestsCodec(object):
         return har
 
     def decode_HarRequestBody(self, raw):
-        if isinstance(raw, requests.models.Request):
+        if raw.__class__.__name__ in ['Request', 'AWSRequest']:
             return self.decode_HarRequestBody_from_Request(raw)
-        elif isinstance(raw, requests.models.PreparedRequest):
+        elif raw.__class__.__name__ in ['PreparedRequest', 'AWSPreparedRequest']:
             return self.decode_HarRequestBody_from_PreparedRequest(raw)
         else:
-            raise ValueError
+            raise ValueError(raw.__class__.__name__)
 
     def decode_HarRequestBody_from_Request(self, raw):
         body_params = {}
-        body_params.update(raw.data)
-        body_params.update(raw.files)
+        if isinstance(raw.data, dict):
+            body_params.update(raw.data)
+        if isinstance(raw.files, dict):
+            body_params.update(raw.files)
 
         har = self.dict_class()
         har['mimeType'] = 'UNKNOWN'
@@ -512,12 +492,7 @@ class RequestsCodec(object):
         return har
 
     def decode_HarQueryStringParams(self, raw):
-        if isinstance(raw, requests.models.Request):
-            return self.decode_HarQueryStringParams_from_Request(raw)
-        elif isinstance(raw, requests.models.PreparedRequest):
-            return self.decode_HarQueryStringParams_from_PreparedRequest(raw)
-        else:
-            raise ValueError
+        return getattr(self, 'decode_HarQueryStringParams_from_' + raw.__class__.__name__)(raw)
 
     def decode_HarQueryStringParams_from_Request(self, raw):
         return list(map(harlib.utils.dict_from_pair, raw.params.items()))
@@ -529,6 +504,10 @@ class RequestsCodec(object):
         except:
             return []
 
+    decode_HarQueryStringParams_from_AWSRequest = decode_HarQueryStringParams_from_Request
+    decode_HarQueryStringParams_from_AWSPreparedRequest = decode_HarQueryStringParams_from_PreparedRequest
+    decode_HarRequest_from_AWSRequest = decode_HarRequest_from_Request
+    decode_HarRequest_from_AWSPreparedRequest = decode_HarRequest_from_Request
     decode_HarRequest_from_PreparedRequest = decode_HarRequest_from_Request
 
     ##########################################################################################
@@ -578,10 +557,10 @@ class RequestsCodec(object):
         io.write('\t],\n')
         io.write('\t"headers": [\n')
 
-        if isinstance(raw, requests.models.Request):
+        if raw.__class__.__name__ in ['Request', 'AWSRequest']:
             cookies = list(raw.cookies.items()) if raw.cookies else []
             headers = list(raw.headers.items())
-        elif isinstance(raw, requests.models.PreparedRequest):
+        elif raw.__class__.__name__ in ['PreparedRequest', 'AWSPreparedRequest']:
             cookies = list(raw._cookies.items()) if raw._cookies else []
             headers = list(raw.headers.lower_items())
         else:

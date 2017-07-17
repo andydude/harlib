@@ -3,7 +3,7 @@
 #
 # harlib
 # Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
+#
 # This library ("it") is free software; it is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
 # GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
@@ -18,7 +18,7 @@ import six
 import unittest
 import urllib3
 
-class TestUtils(unittest.TestCase):
+class HarUtilsMixin(object):
 
     def assertEqualHttplibHTTPResponse(self, resp, resp2, msg=None):
         ResponseCls = http_client.HTTPResponse
@@ -132,3 +132,7 @@ class TestUtils(unittest.TestCase):
         if len(history) != len(history2): return
         for i in six.moves.range(len(history)):
             self.assertEqualPreparedRequest(history[i], history2[i], msg)
+
+
+class TestUtils(unittest.TestCase, HarUtilsMixin):
+    pass

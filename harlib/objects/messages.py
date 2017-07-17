@@ -65,6 +65,8 @@ class HarCookie(HarNameValuePair):
             har = obj.to_json()
         elif isinstance(obj, (tuple, list)):
             har = self.decode(obj)
+        elif isinstance(obj, dict):
+            har = obj  # from .har.json
         else:
             print("invalid cookie %s" % repr(obj))
 
@@ -86,6 +88,8 @@ class HarHeader(HarNameValuePair):
             har = obj.to_json()
         elif isinstance(obj, (tuple, list)):
             har = self.decode(obj)
+        elif isinstance(obj, dict):
+            har = obj  # from .har.json
         else:
             print("invalid header %s" % repr(obj))
 
