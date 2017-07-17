@@ -21,7 +21,7 @@ class MainTests(TestCase, HarUtilsMixin):
         session = harlib.sessions.HarSession(filename='/dev/stdout')
         for entry in har_file.log.entries:
             request = entry.request.encode(requests.Request)
-            expected_response = entry.request.encode(requests.Request)
+            expected_response = entry.encode(requests.Response)
             actual_response = session.request(**vars(request))
             self.assertEqualResponse(expected_response, actual_response)
     
