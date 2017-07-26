@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from metaobject import MetaObject
 import logging
+import harlib.codecs
 try:
     from collections import OrderedDict
 except ImportError:
@@ -17,9 +18,11 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Superclass for all HAR model objects
-class HarObject(MetaObject):
 
+class HarObject(MetaObject):
+    '''
+    Superclass for all HAR model objects
+    '''
     _ordered = ()
 
     def __init__(self, obj=None):
@@ -29,8 +32,10 @@ class HarObject(MetaObject):
 
     def items(self):
         def key(item):
-            try: order = self._ordered.index(item[0])
-            except ValueError: order = 9999
+            try:
+                order = self._ordered.index(item[0])
+            except ValueError:
+                order = 9999
             return order
 
         # if we have a specific order, then sort keys
@@ -66,7 +71,8 @@ class HarObject(MetaObject):
         codec.serialize(io, raw, self.__class__)
 
     def unserialize(self, io):
-        raise ValueError("%s could not be unserialized" % raw.__class__)
+        raise ValueError("%s could not be unserialized" % io.__class__)
+
 
 def initialize_codecs():
     if hasattr(HarObject, '_codecs'):
@@ -78,26 +84,27 @@ def initialize_codecs():
         import harlib.codecs.requests
         HarObject._codecs.append(harlib.codecs.requests.Urllib3Codec())
         HarObject._codecs.append(harlib.codecs.requests.RequestsCodec())
-    except:
-        print("no requests")
+    except Exception as err:
+        logger.warning("no requests/urllib3: %s" % repr(err), exc_info=True)
 
     try:
         import harlib.codecs.httplib
         HarObject._codecs.append(harlib.codecs.httplib.Urllib2Codec())
         HarObject._codecs.append(harlib.codecs.httplib.HttplibCodec())
-    except:
-        print("no httplib")
+    except Exception as err:
+        logger.warning("no urllib/httplib: %s" % repr(err), exc_info=True)
 
     try:
         import harlib.codecs.django
         HarObject._codecs.append(harlib.codecs.django.DjangoCodec())
-    except:
-        print("no django")
+    except Exception as err:
+        logger.warning("no django: %s" % repr(err), exc_info=True)
 
     try:
         import harlib.codecs.default
         HarObject._codecs.append(harlib.codecs.default.DefaultCodec())
-    except:
-        print("no default")
+    except Exception as err:
+        logger.warning("no default: %s" % repr(err), exc_info=True)
+
 
 initialize_codecs()

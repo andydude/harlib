@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
+#
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
+
 from __future__ import absolute_import
-from six.moves import (http_client, urllib)
 import collections
 from .metamodel import HarObject
 
@@ -19,7 +19,9 @@ from .messages import (
     HarMessage,
 )
 
-class HarResponseBody(HarMessageBody): # <content>
+
+class HarResponseBody(HarMessageBody):
+    # <content>
 
     _required = [
         'mimeType',
@@ -49,6 +51,7 @@ class HarResponseBody(HarMessageBody): # <content>
             har = self.decode(obj)
 
         super(HarResponseBody, self).__init__(har)
+
 
 class HarResponse(HarMessage):
 
@@ -115,48 +118,3 @@ class HarResponse(HarMessage):
     @property
     def size(self):
         return self.headersSize + self.bodySize
-
-    #def get_body(self, obj):
-    #    har = dict()
-    #    text = ''
-    #
-    #    if isinstance(obj, HarObject):
-    #        har = obj.to_json()
-    #
-    #    if isinstance(obj, django.http.response.HttpResponse):
-    #        har['mimeType'] = obj._headers.get('content-type')[1]
-    #        text = obj.content
-    #
-    #    if isinstance(obj, http_client.HTTPResponse):
-    #        har['mimeType'] = obj.msg.getheader('content-type')
-    #        text = obj.read()
-    #
-    #    if isinstance(obj, requests.Response):
-    #        har['mimeType'] = obj.headers.get('content-type')
-    #        try:
-    #            text = obj.text
-    #        except:
-    #            text = ''
-    #
-    #    har['text'] = text
-    #    har['size'] = len(text)
-    #    har['compression'] = -1
-    #
-    #    use_base64 = False
-    #    if use_base64:
-    #        har['encoding'] = 'base64'
-    #        #har['text'] = re-encode
-    #
-    #    return har
-
-    #def to_httplib(self):
-    #    return self.encode(http_client.HTTPResponse)
-    #
-    #def to_urllib(self):
-    #    return self.encode(urllib.response.addinfourl)
-    #
-    #def to_urllib3(self):
-    #    return self.encode(urllib3r.HTTPResponse)
-    #
-    #def to_requests(self):
-    #    return self.encode(requests.Response)

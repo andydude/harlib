@@ -2,15 +2,17 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 '''
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
+import socket
+import struct
 import json
 import six
 from collections import Mapping
@@ -18,38 +20,44 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+    
+# flake8: noqa
+
 
 def render_http_version(num):
     '''
     Function from ._httpVersionNumber to .httpVersion
     '''
-    if num == 19: return 'SPDY'
-    return 'HTTP/%s' % str(float(num)/10.0)
+    return 'HTTP/%s' % str(float(num) / 10.0)
+
 
 def parse_http_version(s):
     '''
     Function from .httpVersion to ._httpVersionNumber
     '''
-    if s.upper() == 'SPDY': return 19
     return int(float(s.split('/', 1)[1])*10.0)
+
 
 def parse_pair(item):
     if '=' not in item:
         item += '='
-        #raise ValueError(repr(item), 'must be of the form A = B')
     if '&' in item:
         raise ValueError(repr(item), 'must split on "&" first')
     name, value = item.split('=')
     return {'name': name, 'value': value}
 
+
 def dict_from_pair(pair):
     return {'name': pair[0], 'value': pair[1]}
+
 
 def pair_from_dict(data):
     return (data['name'], data['value'])
 
+
 def pair_from_obj(data):
     return (data.name, data.value)
+
 
 def decode_json(o, **kwargs):
     d = o
@@ -58,21 +66,25 @@ def decode_json(o, **kwargs):
     har = map(dict_from_pair, d.items())
     return har
 
+
 def decode_multipart(o, content_type, **kwargs):
     har = []
 
     try:
-        if isinstance(o, basestring):
+        if isinstance(o, six.string_types):
             import multipart
-            content_type, options = multipart.parse_options_header(content_type)
+            content_type, options = multipart.parse_options_header(
+                content_type)
             assert content_type == 'multipart/form-data'
             stream = six.BytesIO(o)
             boundary = six.binary_type(options.get('boundary'))
             assert boundary
-            for part in multipart.MultipartParser(stream, boundary, len(o), **kwargs):
+            for part in multipart.MultipartParser(stream, boundary, len(o),
+                                                  **kwargs):
                 if part.filename or not part.is_buffered():
-                    param = {'name': part.name, 'value': str(part.value), 'filename': str(part.filename)}
-                else: # TODO: Big form-fields are in the files dict. really?
+                    param = {'name': part.name, 'value': str(part.value),
+                             'filename': str(part.filename)}
+                else:  # TODO: Big form-fields are in the files dict. really?
                     param = {'name': part.name, 'value': str(part.value)}
                 har.append(param)
     except:
@@ -80,16 +92,19 @@ def decode_multipart(o, content_type, **kwargs):
 
     return har
 
+
 def decode_query(o):
     har = []
-    if isinstance(o, basestring):
+    if isinstance(o, six.string_types):
         from requests.packages import urllib3 as urllib3r
         query = urllib3r.util.parse_url(o).query
-        if query is None: return []
+        if query is None:
+            return []
         pairs = query.split('&')
         pairs = filter(lambda it: it != '', pairs)
         har = map(parse_pair, pairs)
     return har
+
 
 def encode_query(d):
     har = ''
@@ -105,7 +120,6 @@ def encode_query(d):
     else:
         return ''
 
-## SocketOption stuff
 
 def get_sockopts_from_response(resp):
     '''
@@ -124,6 +138,7 @@ def get_sockopts_from_response(resp):
 
     sockopts = get_sockopts_from_socket(sock)
     return sockopts
+
 
 def get_sockopts_from_socket(sock):
     '''
@@ -215,7 +230,6 @@ def get_sockopts_from_socket(sock):
         except:
             pass
         else:
-            #if value == 0: continue
             opt = OrderedDict()
             opt["level"] = level
             opt["name"] = name
@@ -232,7 +246,7 @@ def get_sockopts_from_socket(sock):
     return opts
 
 
-## XML stuff
+# XML stuff
 try:
     import bs4
 
@@ -252,14 +266,15 @@ try:
             tag.contents = []
             key2 = xml_plural_to_singular.get(key, 'li')
             for v in value:
-                tag.append(xml_dump_named_tree(key2, v, soup=soup, default=default))
+                tag.append(xml_dump_named_tree(key2, v, soup=soup,
+                                               default=default))
         elif isinstance(value, dict):
             tag.contents = []
             for k, v in value.items():
-                tag.append(xml_dump_named_tree(k, v, soup=soup, default=default))
+                tag.append(xml_dump_named_tree(k, v, soup=soup,
+                                               default=default))
         else:
             tag.append(soup.new_string(default(value)))
-            #'<%s>%s</%s>' % (key, default(value), key)).children[0].children[0].children[0]
         return tag
 
     def xml_dumps(d, indent=False):
@@ -277,7 +292,7 @@ except ImportError:
     HAS_XML = False
     bs4 = None
 
-## YAML stuff
+# YAML stuff
 try:
     import yaml
 
@@ -292,9 +307,11 @@ try:
         for item_key, item_value in mapping:
             node_key = self.represent_data(item_key)
             node_value = self.represent_data(item_value)
-            if not (isinstance(node_key, yaml.ScalarNode) and not node_key.style):
+            if not (isinstance(node_key, yaml.ScalarNode)
+                    and not node_key.style):
                 best_style = False
-            if not (isinstance(node_value, yaml.ScalarNode) and not node_value.style):
+            if not (isinstance(node_value, yaml.ScalarNode)
+                    and not node_value.style):
                 best_style = False
             value.append((node_key, node_value))
         if flow_style is None:
@@ -304,11 +321,13 @@ try:
                 node.flow_style = best_style
         return node
 
-    yaml.representer.BaseRepresenter.represent_mapping = yaml_represent_ordered_mapping
-    yaml.representer.Representer.add_representer(OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
+    yaml.representer.BaseRepresenter.represent_mapping = \
+        yaml_represent_ordered_mapping
+    yaml.representer.Representer.add_representer(
+        OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 
     def yaml_dumps(d):
-         return yaml.dump(d, indent=2, default_flow_style=False)
+        return yaml.dump(d, indent=2, default_flow_style=False)
 
     HAS_YAML = True
 except ImportError:

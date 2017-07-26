@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 '''
 harlib - HTTP Archive (HAR) format library
 '''
@@ -18,6 +18,7 @@ import six
 import unittest
 import urllib3
 
+
 class HarUtilsMixin(object):
 
     def assertEqualHttplibHTTPResponse(self, resp, resp2, msg=None):
@@ -25,7 +26,6 @@ class HarUtilsMixin(object):
         self.assertEqual(resp2.__class__, ResponseCls)
         self.assertEqual(resp.__class__, ResponseCls)
         self.assertEqual(resp.debuglevel, resp2.debuglevel)
-        #self.assertEqual(resp.strict, resp2.strict)
         self.assertEqual(resp._method, resp2._method)
         self.assertEqual(resp.version, resp2.version)
         self.assertEqual(resp.status, resp2.status)
@@ -34,7 +34,8 @@ class HarUtilsMixin(object):
         self.assertEqual(resp.chunk_left, resp2.chunk_left)
         self.assertEqual(resp.length, resp2.length)
         self.assertEqual(resp.will_close, resp2.will_close)
-        #self.assertEqual(to_resp.fp, resp.fp) -- impossible
+        # self.assertEqual(resp.strict, resp2.strict)
+        # self.assertEqual(to_resp.fp, resp.fp) -- impossible
 
     def assertEqualUrllib2Request(self, req, req2, msg=None):
         self.assertEqual(req2.__class__, urllib.request.Request)
@@ -42,7 +43,7 @@ class HarUtilsMixin(object):
         self.assertEqual(req.get_full_url(), req2.get_full_url())
         self.assertEqual(req.type, req2.type)
         self.assertEqual(req.host, req2.host)
-        self.assertEqual(req.port, req2.port)
+        # self.assertEqual(req.port, req2.port)
         self.assertEqual(req.data, req2.data)
         self.assertEqual(req.headers, req2.headers)
         self.assertEqual(req.unverifiable, req2.unverifiable)
@@ -54,19 +55,19 @@ class HarUtilsMixin(object):
         self.assertIn(resp.__class__, ResponseCls)
         self.assertEqual(resp.status, resp2.status)
         self.assertEqual(resp.reason, resp2.reason)
-        #self.assertEqual(resp.strict, resp2.strict)
         self.assertEqual(resp.decode_content, resp2.decode_content)
         self.assertEqual(resp.version, resp2.version)
         self.assertEqual(resp._body, resp2._body)
-        #self.assertEqual(resp._fp_bytes_read, resp2._fp_bytes_read)
-        #self.assertEqual(resp._original_response, resp2._original_response)
+        # self.assertEqual(resp.strict, resp2.strict)
+        # self.assertEqual(resp._fp_bytes_read, resp2._fp_bytes_read)
+        # self.assertEqual(resp._original_response, resp2._original_response)
 
         self.assertEqualHeaders(resp.headers, resp2.headers)
 
         #  -- impossible to serialize and/or compare
-        #self.assertEqual(resp._fp, resp2._fp)
-        #self.assertEqual(resp._connection, resp2._connection)
-        #self.assertEqual(resp._pool, resp2._pool)
+        # self.assertEqual(resp._fp, resp2._fp)
+        # self.assertEqual(resp._connection, resp2._connection)
+        # self.assertEqual(resp._pool, resp2._pool)
 
     def assertEqualResponse(self, resp, resp2, msg=None):
         self.assertEqual(resp2.__class__, requests.Response)
@@ -110,26 +111,29 @@ class HarUtilsMixin(object):
     def assertEqualCookies(self, cookies, cookies2, msg=None):
         self.assertEqual(cookies.__class__, cookies2.__class__, msg)
         self.assertEqual(len(cookies), len(cookies2), msg)
-        #if len(headers) != len(headers2): return
-        #keys = utils.dict_sortedkeys(headers)
-        #keys2 = utils.dict_sortedkeys(headers2)
-        #for i in six.moves.range(len(headers)):
+        # if len(headers) != len(headers2): return
+        # keys = utils.dict_sortedkeys(headers)
+        # keys2 = utils.dict_sortedkeys(headers2)
+        # for i in six.moves.range(len(headers)):
 
     def assertEqualHeaders(self, headers, headers2, msg=None):
         self.assertEqual(headers.__class__, headers2.__class__, msg)
         self.assertEqual(len(headers), len(headers2), msg)
-        if len(headers) != len(headers2): return
+        if len(headers) != len(headers2):
+            return
         keys = sorted(headers.keys())
         keys2 = sorted(headers2.keys())
         for i in six.moves.range(len(headers)):
             self.assertEqual(keys[i].lower(), keys2[i].lower(), msg)
             self.assertEqual(headers[keys[i]], headers2[keys2[i]], msg)
-            self.assertEqual(headers[keys[i]].__class__, headers2[keys2[i]].__class__, msg)
-        #self.assertEqual(headers, headers2)
+            self.assertEqual(headers[keys[i]].__class__,
+                             headers2[keys2[i]].__class__, msg)
+        # self.assertEqual(headers, headers2)
 
     def assertEqualHistory(self, history, history2, msg=None):
         self.assertEqual(len(history), len(history2), msg)
-        if len(history) != len(history2): return
+        if len(history) != len(history2):
+            return
         for i in six.moves.range(len(history)):
             self.assertEqualPreparedRequest(history[i], history2[i], msg)
 

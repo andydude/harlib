@@ -2,37 +2,29 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
+#
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 '''
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
 from collections import Mapping, Sequence
-import json
 import six
-from six.moves import (http_client, urllib)
 
 from .metamodel import HarObject
 
 from .options import (
-    HarClientOptions, 
+    HarClientOptions,
     HarServerOptions,
     HarSocketOption,
 )
 
-from .request import (
-    HarRequest, 
-    HarRequestBody, 
-)
+from .request import HarRequest
+from .response import HarResponse
 
-from .response import (
-    HarResponse,
-    HarResponseBody,
-)
 
 class HarCache(HarObject):
 
@@ -46,6 +38,7 @@ class HarCache(HarObject):
 
     def __init__(self, obj=None):
         super(HarCache, self).__init__(obj)
+
 
 class HarPage(HarObject):
 
@@ -63,6 +56,7 @@ class HarPage(HarObject):
     def __init__(self, obj=None):
         super(HarPage, self).__init__(obj)
 
+
 class HarPageTimings(HarObject):
 
     _optional = {
@@ -73,6 +67,7 @@ class HarPageTimings(HarObject):
 
     def __init__(self, obj=None):
         super(HarPageTimings, self).__init__(obj)
+
 
 class HarTimings(HarObject):
 
@@ -105,8 +100,10 @@ class HarTimings(HarObject):
         '_total': int,  # aka ../time
     }
 
+
 class HarTimeouts(HarTimings):
     pass
+
 
 class HarNameVersionPair(HarObject):
 
@@ -122,14 +119,18 @@ class HarNameVersionPair(HarObject):
     }
 
     def __init__(self, obj=None):
-        if not obj: obj = None
+        if not obj:
+            obj = None
         super(HarNameVersionPair, self).__init__(obj)
+
 
 class HarCreator(HarNameVersionPair):
     pass
 
+
 class HarBrowser(HarNameVersionPair):
     pass
+
 
 class HarEntry(HarObject):
 
@@ -216,60 +217,21 @@ class HarEntry(HarObject):
         from datetime import datetime
         return datetime.utcnow().isoformat() + 'Z'
 
-    #def get_connection(self, obj):
-    #    from datetime import datetime
-    #    now = datetime.now()
-    #    return now.strftime('%s')
-    #
-    #def get_timings(self, obj):
-    #    har = obj
-    #    if isinstance(obj, http_client.HTTPResponse):
-    #        har = dict(
-    #            connect = -1,
-    #            dns = -1,
-    #            receive = -1,
-    #            send = -1,
-    #            ssl = -1,
-    #            wait = -1,
-    #            _total = -1
-    #        )
-    #    if isinstance(obj, requests.Response):
-    #        total = obj.elapsed.total_seconds()*1000.0
-    #        har = dict(
-    #            connect = -1,
-    #            dns = -1,
-    #            receive = -1,
-    #            send = -1,
-    #            ssl = -1,
-    #            wait = total,
-    #            _total = total
-    #        )
-    #    return har
-
-    #def to_httplib(self):
-
-    ## urllib2 lacks a decent Response class
-    #def to_urllib2(self):
-    #    return self.encode(urllib.request.Request)
-    #
-    #def to_urllib3(self):
-    #    return self.encode(urllib3r.HTTPResponse)
-    #
-    #def to_requests(self):
-    #    return self.encode(requests.Response)
-
     def to_json(self, with_content=True, dict_class=dict):
         d = super(HarEntry, self).to_json()
         if not with_content:
             try:
                 del d['request']['postData']['text']
                 del d['request']['postData']['encoding']
-            except: pass
+            except:
+                pass
             try:
                 del d['response']['content']['text']
                 del d['response']['content']['encoding']
-            except: pass
+            except:
+                pass
         return d
+
 
 class HarLog(HarObject):
 
@@ -321,13 +283,14 @@ class HarLog(HarObject):
         elif isinstance(obj, HarLog):
             har = [entry.to_json() for entry in obj.entries]
 
-        elif obj == None:
+        elif obj is None:
             return []
 
         else:
             har = self.decode(obj)
 
         return har
+
 
 class HarFile(HarObject):
     _required = ['log']

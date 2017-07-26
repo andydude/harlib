@@ -2,19 +2,18 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from requests.packages import urllib3 as urllib3r
 import harlib
 import json
 import requests
 import six
-import urllib3
-from datetime import datetime
 from six.moves import http_client
 from harlib.codecs.httplib import HttplibCodec
 try:
@@ -22,8 +21,12 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
+# flake8: noqa
+
+
 KEEP_SIZE = False
 DEFAULT_VERSION = 'HTTP/0'
+
 
 def separate(iterable):
     first = True
@@ -40,8 +43,10 @@ def separate(iterable):
         first = False
     return separated
 
+
 def from_pair(x):
     return x[0] + ': ' + x[1]
+
 
 class Urllib3Codec(object):
 
@@ -55,8 +60,7 @@ class Urllib3Codec(object):
     def __init__(self):
         pass
 
-    ##########################################################################################
-    ## Encoding
+    # Encoding
 
     def encode(self, har, raw_class):
         assert raw_class.__module__ in self.modules
@@ -68,28 +72,28 @@ class Urllib3Codec(object):
         resp = self.encode_HarResponse_to_HTTPResponse(har.response)
         resp.strict = har._clientOptions.failOnError
         resp.decode_content = har._clientOptions.decodeContent
-        resp.original_response = self.httplib_codec.encode(har, http_client.HTTPResponse)
-        #resp._fp_bytes_read = self._clientOptions.contentRead
-        #resp.connection = None
-        #resp.pool = None
+        resp.original_response = self.httplib_codec.encode(
+            har, http_client.HTTPResponse)
+        # resp._fp_bytes_read = self._clientOptions.contentRead
+        # resp.connection = None
+        # resp.pool = None
         return resp
 
     def encode_HarResponse_to_HTTPResponse(self, har):
         headers = dict(map(harlib.utils.pair_from_obj, har.headers))
 
         resp = self.response_class(
-            body = None,
-            headers = headers,
-            status = har.status,
-            version = harlib.utils.parse_http_version(har.httpVersion),
-            reason = har.statusText,
-            preload_content = False,
+            body=None,
+            headers=headers,
+            status=har.status,
+            version=harlib.utils.parse_http_version(har.httpVersion),
+            reason=har.statusText,
+            preload_content=False,
         )
 
         return resp
 
-    ##########################################################################################
-    ## Decoding
+    # Decoding
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
@@ -103,7 +107,8 @@ class Urllib3Codec(object):
         har['time'] = 0
         har['request'] = raw
         har['response'] = raw
-        har['_clientOptions'] = self.decode_HarClientOptions_from_HTTPResponse(raw)
+        har['_clientOptions'] = \
+            self.decode_HarClientOptions_from_HTTPResponse(raw)
         return har
 
     def decode_HarClientOptions_from_HTTPResponse(self, raw):
@@ -128,7 +133,8 @@ class Urllib3Codec(object):
 
         if KEEP_SIZE:
             try:
-                headers = '\r\n'.join(map(lambda x: '%s: %s' % x, har['headers']))
+                headers = '\r\n'.join(map(lambda x: '%s: %s' % x,
+                                          har['headers']))
                 har['headersSize'] = len(headers + '\r\n\r\n')
                 har['bodySize'] = len(har['content']['text'])
             except:
@@ -166,8 +172,7 @@ class Urllib3Codec(object):
     def decode_HarRequestBody_from_HTTPResponse(self, raw):
         return {'mimeType': 'UNKNOWN'}
 
-    ##########################################################################################
-    ## Serialization
+    # Serialization
 
     def serialize_from_HTTPResponse(self, io, raw):
         # raw.status
@@ -177,8 +182,8 @@ class Urllib3Codec(object):
         # raw.data
         pass
 
-    ##########################################################################################
-    ## TODO: Deserialization
+    # TODO: Deserialization
+
 
 class RequestsCodec(object):
 
@@ -193,8 +198,7 @@ class RequestsCodec(object):
     def __init__(self):
         pass
 
-    ##########################################################################################
-    ## Encoding
+    # Encoding
 
     def encode(self, har, raw_class):
         assert raw_class.__module__ in self.modules
@@ -210,9 +214,10 @@ class RequestsCodec(object):
         from datetime import timedelta
         resp = self.encode_HarResponse_to_Response(har.response)
         resp.url = har.response.redirectURL or har.request.url
-        resp.elapsed = timedelta(0, float(har.time)/1000.0)
+        resp.elapsed = timedelta(0, float(har.time) / 1000.0)
         resp.encoding = har._clientOptions.charset
-        resp.raw = self.urllib3_codec.encode(har, urllib3r.response.HTTPResponse)
+        resp.raw = self.urllib3_codec.encode(
+            har, urllib3r.response.HTTPResponse)
         return resp
 
     def encode_HarResponse_to_Response(self, har):
@@ -233,11 +238,12 @@ class RequestsCodec(object):
         resp.reason = har.statusText
         resp.cookies = CookiesCls(OrderedDict(cookies))
         resp.headers = HeadersCls(OrderedDict(headers))
-        resp.raw = self.urllib3_codec.encode(har, urllib3r.response.HTTPResponse)
+        resp.raw = self.urllib3_codec.encode(
+            har, urllib3r.response.HTTPResponse)
         resp.url = har.redirectURL
         resp.history = []
-        #resp.elapsed = 0 # entry.time
-        #resp.encoding = None # entry._clientOptions.charset
+        # resp.elapsed = 0 # entry.time
+        # resp.encoding = None # entry._clientOptions.charset
 
         return resp
 
@@ -248,17 +254,18 @@ class RequestsCodec(object):
         headers = list(map(lambda x: x.to_requests(), har.headers))
         cookies = list(map(lambda x: x.to_requests(), har.cookies))
 
-        req = RequestCls(method = har.method, url = har.url)
+        req = RequestCls(method=har.method, url=har.url)
         req.headers = HeadersCls(headers)
-        req.cookies = HeadersCls(cookies) if har.cookies else None
+        req.cookies = CookiesCls(cookies) if har.cookies else None
         req.params = dict(map(harlib.utils.pair_from_obj, har.queryString))
 
         if har.postData:
-            req.data = dict(map(harlib.utils.pair_from_obj, har.postData.params))
+            req.data = dict(map(harlib.utils.pair_from_obj,
+                                har.postData.params))
 
-        #req.hooks -- impossible
-        #req.auth -- impossible
-        #req.params, req.data, req.files = self.body_params()
+        # req.hooks -- impossible
+        # req.auth -- impossible
+        # req.params, req.data, req.files = self.body_params()
         return req
 
     def encode_HarRequest_to_PreparedRequest(self, har):
@@ -277,13 +284,26 @@ class RequestsCodec(object):
         if har.postData:
             preq.body = har.postData.text
 
-        #req.hooks -- impossible
-        #req.auth -- impossible
-        #req.params, req.data, req.files = self.body_params()
+        # req.hooks -- impossible
+        # req.auth -- impossible
+        # req.params, req.data, req.files = self.body_params()
         return preq
 
-    ##########################################################################################
-    ## Decoding
+    def encode_HarRequest_to_AWSRequest(self, har):
+        from botocore.awsrequest import AWSRequest
+        kwargs = {}
+        kwargs['method'] = har.method
+        kwargs['url'] = har.url
+        req = AWSRequest(**kwargs)
+        return req
+
+    def encode_HarRequest_to_AWSPreparedRequest(self, har):
+        from botocore.awsrequest import AWSPreparedRequest
+        req = self.encode_HarRequest_to_AWSRequest(har)
+        preq = AWSPreparedRequest(req)
+        return preq
+
+    # Decoding
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
@@ -305,19 +325,19 @@ class RequestsCodec(object):
         return har
 
     def decode_HarEntry_from_Response(self, raw):
-        from datetime import datetime
-        started = (datetime.utcnow() - raw.elapsed).isoformat() + 'Z'
+        # started = (datetime.utcnow() - raw.elapsed).isoformat() + 'Z'
 
         har = self.dict_class()
         har['startedDateTime'] = None
-        har['time'] = raw.elapsed.total_seconds()*1000.0
+        har['time'] = raw.elapsed.total_seconds() * 1000.0
         har['request'] = raw.request
         har['response'] = raw
         har['cache'] = {}
         har['timings'] = self.decode_HarTimings_from_Response(raw)
         har['connection'] = ''
         try:
-            har['_clientOptions'] = self.decode_HarClientOptions_from_Response(raw)
+            har['_clientOptions'] = \
+                self.decode_HarClientOptions_from_Response(raw)
         except:
             pass
         return har
@@ -326,7 +346,7 @@ class RequestsCodec(object):
         har = self.dict_class()
         har['charset'] = raw.encoding
         har['decodeContent'] = raw.raw.decode_content
-        #har['contentRead'] = raw.raw._fp_bytes_read
+        # har['contentRead'] = raw.raw._fp_bytes_read
         return har
 
     def decode_HarClientOptions_from_Session(self, raw):
@@ -348,7 +368,8 @@ class RequestsCodec(object):
         har['status'] = raw.status_code
         har['statusText'] = raw.reason
         try:
-            har['httpVersion'] = harlib.utils.render_http_version(raw.raw.version)
+            har['httpVersion'] = \
+                harlib.utils.render_http_version(raw.raw.version)
         except:
             har['httpVersion'] = DEFAULT_VERSION
 
@@ -387,13 +408,13 @@ class RequestsCodec(object):
         return har
 
     def decode_HarTimings_from_Response(self, raw):
-        total = raw.elapsed.total_seconds()*1000.0
+        total = raw.elapsed.total_seconds() * 1000.0
 
         har = self.dict_class()
         har['connect'] = -1
         har['dns'] = -1
         har['receive'] = -1
-        har['send']= -1
+        har['send'] = -1
         har['ssl'] = -1
         har['wait'] = total
         har['_total'] = total
@@ -403,13 +424,19 @@ class RequestsCodec(object):
         har = self.dict_class()
         har['method'] = raw.method
         har['url'] = raw.url
-        har['httpVersion'] = 'HTTP/1.1' # requests uses this default
+        har['httpVersion'] = 'HTTP/1.1'  # requests uses this default
 
         if raw.__class__.__name__ in ['Request', 'AWSRequest']:
             har['headers'] = list(raw.headers.items())
             har['cookies'] = list(raw.cookies.items()) if raw.cookies else []
-        elif raw.__class__.__name__ in ['PreparedRequest', 'AWSPreparedRequest']:
-            har['headers'] = list(raw.headers.lower_items())
+        elif raw.__class__.__name__ in ['PreparedRequest',
+                                        'AWSPreparedRequest']:
+            if not raw.headers:
+                har['headers'] = []
+            elif hasattr(raw.headers, 'lower_items'):
+                har['headers'] = list(raw.headers.lower_items())
+            else:
+                har['headers'] = list(raw.headers.items())
             har['cookies'] = list(raw._cookies.items()) if raw._cookies else []
         else:
             print("unknown request type")
@@ -435,7 +462,8 @@ class RequestsCodec(object):
     def decode_HarRequestBody(self, raw):
         if raw.__class__.__name__ in ['Request', 'AWSRequest']:
             return self.decode_HarRequestBody_from_Request(raw)
-        elif raw.__class__.__name__ in ['PreparedRequest', 'AWSPreparedRequest']:
+        elif raw.__class__.__name__ in ['PreparedRequest',
+                                        'AWSPreparedRequest']:
             return self.decode_HarRequestBody_from_PreparedRequest(raw)
         else:
             raise ValueError(raw.__class__.__name__)
@@ -467,7 +495,10 @@ class RequestsCodec(object):
         body_text = raw.body or ''
 
         har = self.dict_class()
-        har['mimeType'] = raw.headers.get('Content-Type')
+        if not raw.headers:
+            har['mimeType'] = 'unknown'
+        else:
+            har['mimeType'] = raw.headers.get('Content-Type')
         har['text'] = body_text or ''
         har['_size'] = len(har['text'])
 
@@ -475,24 +506,26 @@ class RequestsCodec(object):
             har['params'] = []
         elif har['mimeType'].startswith('multipart/form-data'):
             try:
-                har['params'] = harlib.utils.decode_multipart(har['text'], har['mimeType'])
-            except Exception as err:
+                har['params'] = harlib.utils.decode_multipart(
+                    har['text'], har['mimeType'])
+            except Exception:
                 har['params'] = []
         elif har['mimeType'].startswith('application/x-www-form-urlencoded'):
             try:
                 query = '?' + har['text']
                 har['params'] = harlib.utils.decode_query(query)
-            except Exception as err:
+            except Exception:
                 har['params'] = []
         elif har['mimeType'].startswith('application/json'):
             try:
                 har['params'] = harlib.utils.decode_json(har['text'])
-            except Exception as err:
+            except Exception:
                 har['params'] = []
         return har
 
     def decode_HarQueryStringParams(self, raw):
-        return getattr(self, 'decode_HarQueryStringParams_from_' + raw.__class__.__name__)(raw)
+        prefix = 'decode_HarQueryStringParams_from_'
+        return getattr(self, prefix + raw.__class__.__name__)(raw)
 
     def decode_HarQueryStringParams_from_Request(self, raw):
         return list(map(harlib.utils.dict_from_pair, raw.params.items()))
@@ -504,14 +537,16 @@ class RequestsCodec(object):
         except:
             return []
 
-    decode_HarQueryStringParams_from_AWSRequest = decode_HarQueryStringParams_from_Request
-    decode_HarQueryStringParams_from_AWSPreparedRequest = decode_HarQueryStringParams_from_PreparedRequest
+    decode_HarQueryStringParams_from_AWSRequest = \
+        decode_HarQueryStringParams_from_Request
+    decode_HarQueryStringParams_from_AWSPreparedRequest = \
+        decode_HarQueryStringParams_from_PreparedRequest
+    
     decode_HarRequest_from_AWSRequest = decode_HarRequest_from_Request
     decode_HarRequest_from_AWSPreparedRequest = decode_HarRequest_from_Request
     decode_HarRequest_from_PreparedRequest = decode_HarRequest_from_Request
 
-    ##########################################################################################
-    ## Serialization
+    # Serialization
 
     def serialize(self, io, raw, har_class):
         if raw is None:
@@ -525,10 +560,17 @@ class RequestsCodec(object):
         return getattr(self, method_name)(io, raw)
 
     def serialize_HarHeader_from_tuple(self, io, raw):
-        io.write('\t\t{')
-        io.write('"name": "' + six.binary_type(raw[0]) + '", ')
-        io.write('"value": "' + six.binary_type(raw[1]) + '"')
-        io.write('}') # newline handled by separate()
+        name = raw[0]
+        if isinstance(name, six.text_type):
+            name = name.encode('utf-8')
+        value = raw[1]
+        if isinstance(value, six.text_type):
+            value = value.encode('utf-8')
+            
+        io.write(b'\t\t{')
+        io.write(b'"name": "' + six.binary_type(name) + b'", ')
+        io.write(b'"value": "' + six.binary_type(value) + b'"')
+        io.write(b'}')  # newline handled by separate()
 
     def serialize_HarRequest_from_PreparedRequest(self, io, raw):
         # raw is a PreparedRequest
@@ -548,47 +590,66 @@ class RequestsCodec(object):
         # raw.headers.items
         # raw.cookies
 
-        # usually 4 tabs, omitted
-        io.write('"request": {\n')
-        io.write('\t"method": "' + six.binary_type(raw.method) + '",\n')
-        io.write('\t"url": "' + six.binary_type(raw.url) + '",\n')
-        io.write('\t"httpVersion": "HTTP/1.1",\n')
-        io.write('\t"cookies": [\n')
-        io.write('\t],\n')
-        io.write('\t"headers": [\n')
-
         if raw.__class__.__name__ in ['Request', 'AWSRequest']:
             cookies = list(raw.cookies.items()) if raw.cookies else []
             headers = list(raw.headers.items())
-        elif raw.__class__.__name__ in ['PreparedRequest', 'AWSPreparedRequest']:
+        elif raw.__class__.__name__ in ['PreparedRequest',
+                                        'AWSPreparedRequest']:
             cookies = list(raw._cookies.items()) if raw._cookies else []
             headers = list(raw.headers.lower_items())
         else:
             cookies = []
             headers = []
+
+        def f(x):
+            return x
+        f(cookies)
+        method = raw.method
+        if isinstance(method, six.text_type):
+            method = method.encode('utf-8')
+        url = raw.url
+        if isinstance(url, six.text_type):
+            url = url.encode('utf-8')
+
+        # usually 4 tabs, omitted
+        io.write(b'"request": {\n')
+        io.write(b'\t"method": "' + six.binary_type(method) + b'",\n')
+        io.write(b'\t"url": "' + six.binary_type(url) + b'",\n')
+        io.write(b'\t"httpVersion": "HTTP/1.1",\n')
+        io.write(b'\t"cookies": [\n')
+        io.write(b'\t],\n')
+        io.write(b'\t"headers": [\n')
+
         for _, last, header in separate(headers):
             try:
-                self.serialize_HarHeader_from_tuple(io, (header[0].title(), header[1]))
+                self.serialize_HarHeader_from_tuple(
+                    io, (header[0].title(), header[1]))
             except Exception as err:
                 print(repr(err))
             if last:
-                io.write('\n')
+                io.write(b'\n')
             else:
-                io.write(',\n')
+                io.write(b',\n')
 
-        io.write('\t],\n')
-        io.write('\t"queryString": [\n')
-        io.write('\t],\n')
-        io.write('\t"postData": {\n')
-        io.write('\t\t"mimeType": "' + six.binary_type(raw.headers.get('content-type')) + '",\n')
-        io.write('\t\t"size": -1,\n')
-        io.write('\t\t"text": ""\n')
-        io.write('\t},\n')
-        io.write('\t"headersSize": -1,\n')
-        io.write('\t"bodySize": -1\n')
-        io.write('},\n')
+        ctype = raw.headers.get('content-type')
+        if isinstance(ctype, six.text_type):
+            ctype = ctype.encode('utf-8')
+            
+        io.write(b'\t],\n')
+        io.write(b'\t"queryString": [\n')
+        io.write(b'\t],\n')
+        io.write(b'\t"postData": {\n')
+        io.write(b'\t\t"mimeType": "' +
+                 six.binary_type(ctype) + b'",\n')
+        io.write(b'\t\t"size": -1,\n')
+        io.write(b'\t\t"text": ""\n')
+        io.write(b'\t},\n')
+        io.write(b'\t"headersSize": -1,\n')
+        io.write(b'\t"bodySize": -1\n')
+        io.write(b'},\n')
 
-    serialize_HarRequest_from_Request = serialize_HarRequest_from_PreparedRequest
+    serialize_HarRequest_from_Request = \
+        serialize_HarRequest_from_PreparedRequest
 
     def get_EnvironmentError_from_Exception(self, raw):
 
@@ -598,18 +659,22 @@ class RequestsCodec(object):
             strerror = suberr.strerror
             filename = suberr.filename
             return EnvironmentError(errno, strerror, filename)
-        elif isinstance(raw, requests.packages.urllib3.exceptions.MaxRetryError):
+        elif isinstance(raw, requests.packages.urllib3.
+                        exceptions.MaxRetryError):
             suberr = self.get_EnvironmentError_from_Exception(raw.reason)
             errno = suberr.errno
             strerror = suberr.strerror
             filename = raw.url
             return EnvironmentError(errno, strerror, filename)
-        elif isinstance(raw, requests.packages.urllib3.exceptions.NewConnectionError):
+        elif isinstance(raw, requests.packages.urllib3.
+                        exceptions.NewConnectionError):
             assert isinstance(raw.message, six.string_types)
             if 'Failed to establish a new connection: ' in raw.message:
                 import re
-                _, env_str = raw.message.split('Failed to establish a new connection: ', 1)
-                env_re = re.compile('\[Errno (?P<errno>\d{0,6})\] (?P<strerror>.*)')
+                _, env_str = raw.message.split(
+                    'Failed to establish a new connection: ', 1)
+                env_re = re.compile('\[Errno (?P<errno>\d{0,6})\] '
+                                    '(?P<strerror>.*)')
                 match = env_re.match(env_str)
                 errno = match.group('errno')
                 strerror = match.group('strerror')
@@ -625,26 +690,35 @@ class RequestsCodec(object):
     def serialize_HarResponse_from_Exception(self, io, raw):
         err = self.get_EnvironmentError_from_Exception(raw)
 
+        status = str(err.errno)
+        if isinstance(status, six.text_type):
+            status = status.encode('utf-8')
+        reason = err.strerror
+        if isinstance(reason, six.text_type):
+            reason = reason.encode('utf-8')
+            
         # usually 4 tabs, omitted
-        io.write('"response": {\n')
-        io.write('\t"status": ' + six.binary_type(err.errno) + ',\n')
-        io.write('\t"statusText": "' + six.binary_type(err.strerror) + '",\n')
-        io.write('\t"httpVersion": "HTTP/1.1",\n')
-        io.write('\t"cookies": [\n')
-        io.write('\t],\n')
-        io.write('\t"headers": [\n')
-        io.write('\t],\n')
-        io.write('\t"content": {\n')
-        io.write('\t\t"mimeType": "application/x-error",\n')
-        io.write('\t\t"size": -1,\n')
-        io.write('\t\t"text": ')
+        io.write(b'"response": {\n')
+        io.write(b'\t"status": ' + six.binary_type(err.errno) + b',\n')
+        io.write(b'\t"statusText": "' +
+                 six.binary_type(err.strerror) + b'",\n')
+        io.write(b'\t"httpVersion": "HTTP/1.1",\n')
+        io.write(b'\t"cookies": [\n')
+        io.write(b'\t],\n')
+        io.write(b'\t"headers": [\n')
+        io.write(b'\t],\n')
+        io.write(b'\t"content": {\n')
+        io.write(b'\t\t"mimeType": "application/x-error",\n')
+        io.write(b'\t\t"size": -1,\n')
+        io.write(b'\t\t"text": ')
         io.write(six.binary_type(json.dumps(repr(raw))))
-        io.write('\n\t},\n')
+        io.write(b'\n\t},\n')
 
-        io.write('\t"redirectURL": "' + six.binary_type(err.filename) + '",\n')
-        io.write('\t"headersSize": -1,\n')
-        io.write('\t"bodySize": -1\n')
-        io.write('},\n')
+        io.write(b'\t"redirectURL": "' +
+                 six.binary_type(err.filename) + '",\n')
+        io.write(b'\t"headersSize": -1,\n')
+        io.write(b'\t"bodySize": -1\n')
+        io.write(b'},\n')
 
     def serialize_HarResponse_from_Response(self, io, raw):
         # raw.status_code
@@ -657,86 +731,101 @@ class RequestsCodec(object):
         # raw.request
         # raw.encoding
         # raw.request.url
+        status = str(raw.status_code)
+        if isinstance(status, six.text_type):
+            status = status.encode('utf-8')
+        reason = raw.reason
+        if isinstance(reason, six.text_type):
+            reason = reason.encode('utf-8')
 
         # usually 4 tabs, omitted
-        io.write('"response": {\n')
-        io.write('\t"status": ' + six.binary_type(raw.status_code) + ',\n')
-        io.write('\t"statusText": "' + six.binary_type(raw.reason) + '",\n')
-        io.write('\t"httpVersion": "HTTP/1.1",\n')
-        io.write('\t"cookies": [\n')
-        io.write('\t],\n')
-        io.write('\t"headers": [\n')
+        io.write(b'"response": {\n')
+        io.write(b'\t"status": ' + six.binary_type(status) + b',\n')
+        io.write(b'\t"statusText": "' + six.binary_type(reason) + b'",\n')
+        io.write(b'\t"httpVersion": "HTTP/1.1",\n')
+        io.write(b'\t"cookies": [\n')
+        io.write(b'\t],\n')
+        io.write(b'\t"headers": [\n')
 
         for _, last, header in separate(list(raw.headers.lower_items())):
-            self.serialize_HarHeader_from_tuple(io, (header[0].title(), header[1]))
+            self.serialize_HarHeader_from_tuple(
+                io, (header[0].title(), header[1]))
             if last:
-                io.write('\n')
+                io.write(b'\n')
             else:
-                io.write(',\n')
+                io.write(b',\n')
 
-        io.write('\t],\n')
-        io.write('\t"content": {\n')
-        io.write('\t\t"mimeType": "' + six.binary_type(raw.headers.get('content-type')) + '",\n')
-        io.write('\t\t"size": -1,\n')
-        io.write('\t\t"text": ')
-        io.write(six.binary_type(json.dumps(raw.content)))
-        io.write('\n\t},\n')
+        ctype = raw.headers.get('content-type')
+        if isinstance(ctype, six.text_type):
+            ctype = ctype.encode('utf-8')
+            
+        io.write(b'\t],\n')
+        io.write(b'\t"content": {\n')
+        io.write(b'\t\t"mimeType": "' + six.binary_type(ctype) + b'",\n')
+        io.write(b'\t\t"size": -1,\n')
+        io.write(b'\t\t"text": ')
+        if six.PY3:
+            io.write(six.binary_type(json.dumps(raw.text).encode('utf-8')))
+        else:
+            io.write(six.binary_type(json.dumps(raw.content)))
+        io.write(b'\n\t},\n')
 
-        io.write('\t"redirectURL": "",\n')
-        io.write('\t"headersSize": -1,\n')
-        io.write('\t"bodySize": -1\n')
-        io.write('},\n')
+        io.write(b'\t"redirectURL": "",\n')
+        io.write(b'\t"headersSize": -1,\n')
+        io.write(b'\t"bodySize": -1\n')
+        io.write(b'},\n')
         pass
 
     def serialize_HarTimings_from_Response(self, io, raw):
-        total = raw.elapsed.total_seconds()*1000.0
+        total = raw.elapsed.total_seconds() * 1000.0
+        total = six.text_type(total).encode('utf-8')
         # usually 4 tabs, omitted
-        io.write('"timings": {\n')
-        io.write('\t"send": -1,\n')
-        io.write('\t"wait": ' + six.binary_type(total) + ',\n')
-        io.write('\t"receive": -1\n')
-        io.write('},\n')
-
+        io.write(b'"timings": {\n')
+        io.write(b'\t"send": -1,\n')
+        io.write(b'\t"wait": ' + six.binary_type(total) + b',\n')
+        io.write(b'\t"receive": -1\n')
+        io.write(b'},\n')
 
     def serialize_HarEntry_from_Response(self, io, raw):
-        started = datetime.now().isoformat()
+        from datetime import datetime
+        started = datetime.now().isoformat().encode('utf-8')
         try:
-            total = raw.elapsed.total_seconds()*1000.0
+            total = raw.elapsed.total_seconds() * 1000.0
         except:
             total = 0
+        total = str(total).encode('utf-8')
 
         # usually 3 tabs, omitted
-        io.write('{\n')
-        io.write('"startedDateTime": "' + six.binary_type(started) + '",\n')
-        io.write('"time": "' + six.binary_type(total) + '",\n')
+        io.write(b'{\n')
+        io.write(b'"startedDateTime": "' + six.binary_type(started) + b'",\n')
+        io.write(b'"time": "' + six.binary_type(total) + b'",\n')
         self.serialize_HarRequest_from_PreparedRequest(io, raw.request)
         if hasattr(raw, '_error'):
             self.serialize_HarResponse_from_Exception(io, raw._error)
         else:
             self.serialize_HarResponse_from_Response(io, raw)
             self.serialize_HarTimings_from_Response(io, raw)
-        io.write('"cache": {}\n')
-        io.write('}') # newline handled by separate()
+        io.write(b'"cache": {}\n')
+        io.write(b'}')  # newline handled by separate()
 
     def serialize_HarLog_from_Responses(self, io, raws):
         from harlib import __version__
-        io.write('{\n\t"log": {\n')
-        io.write('\t\t"version": "1.2",\n')
-        io.write('\t\t"creator": {\n')
-        io.write('\t\t\t"name": "harlib",\n')
-        io.write('\t\t\t"version": "' + six.binary_type(__version__) + '"\n')
-        io.write('\t\t},\n')
-        io.write('\t\t"entries": [\n')
+        io.write(b'{\n\t"log": {\n')
+        io.write(b'\t\t"version": "1.2",\n')
+        io.write(b'\t\t"creator": {\n')
+        io.write(b'\t\t\t"name": "harlib",\n')
+        io.write(b'\t\t\t"version": "' + six.binary_type(__version__) + b'"\n')
+        io.write(b'\t\t},\n')
+        io.write(b'\t\t"entries": [\n')
 
         for _, last, raw in separate(list(raws)):
             self.serialize_HarEntry_from_Response(io, raw)
             if last:
-                io.write('\n')
+                io.write(b'\n')
             else:
-                io.write(',\n')
+                io.write(b',\n')
 
-        io.write('\t\t]\n')
-        io.write('\t}\n}\n')
+        io.write(b'\t\t]\n')
+        io.write(b'\t}\n}\n')
 
-    ##########################################################################################
-    ## TODO: Deserialization
+    # TODO: Deserialization

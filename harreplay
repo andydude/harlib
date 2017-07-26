@@ -6,7 +6,7 @@ import harlib
 import requests
 import unittest
 from unittest import TestCase
-from harlib.tests.utils import HarUtilsMixin
+from harlib.test_utils import HarUtilsMixin
 
 class MainTests(TestCase, HarUtilsMixin):
 

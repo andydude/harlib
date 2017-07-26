@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 import logging
 import os
@@ -26,6 +26,8 @@ except ImportError:
     DEFAULT_STREAM = False
 
 logger = logging.getLogger(__name__)
+
+# flake8: noqa
 
 
 class HarSocketManager(object):
@@ -65,7 +67,9 @@ class HarSessionMixin(object):
     def clear(self):
         self._entries = []
 
-    def dump(self, with_content=False, logging_level=None, extra=None, cache=True, with_io=False, **kwargs):
+    def dump(self, with_content=False,
+             logging_level=None, extra=None, cache=True,
+             with_io=False, **kwargs):
         if logging_level is None:
             logging_level = logging.DEBUG
         nentries = len(self._entries)
@@ -103,7 +107,9 @@ class HarSessionMixin(object):
                             previous_filename = ch.read()
                         if os.path.exists(previous_filename):
                             logger.debug('found match cache file')
-                            logger.info('%d cached responses in %s' % (nentries, previous_filename,), extra=extra)
+                            logger.info('%d cached responses in %s' %
+                                        (nentries, previous_filename,),
+                                        extra=extra)
                             return previous_filename
                 # write file
                 with open(self._filename, 'w') as f:
@@ -123,7 +129,8 @@ class HarSessionMixin(object):
         filename = self._filename
         if VIRTUAL_ENV and filename and filename.startswith(VIRTUAL_ENV):
             filename = '${VIRTUAL_ENV}' + filename[len(VIRTUAL_ENV):]
-        logger.log(logging_level, 'Dumped %d responses to %s' % (nentries, filename), extra=extra)
+        logger.log(logging_level, 'Dumped %d responses to %s' %
+                   (nentries, filename), extra=extra)
         return str(self._filename)
 
     def dumps(self, with_content=False, **kwargs):
@@ -174,7 +181,8 @@ class HarSessionMixin(object):
             content_without_reponse_text += entry.request.method
             content_without_reponse_text += entry.request.url
             try:
-                content_without_reponse_text += str(entry.request.postData.text)
+                content_without_reponse_text += str(
+                    entry.request.postData.text)
             except Exception as err:
                 pass
             try:
@@ -183,23 +191,27 @@ class HarSessionMixin(object):
                 pass
             content_without_reponse_text += str(entry.response.status)
             try:
-                content_without_reponse_text += str(entry.response.content.encoding)
+                content_without_reponse_text += str(
+                    entry.response.content.encoding)
             except AttributeError as err:
                 pass
             content = content_without_reponse_text
             try:
                 if isinstance(entry.response.content.text, six.text_type):
-                    content += entry.response.content.text.encode('latin1', 'ignore')
+                    content += entry.response.content.text.encode(
+                        'latin1', 'ignore')
                 else:
                     content += entry.response.content.text
             except AttributeError as err:
                 pass
             except UnicodeEncodeError as err:
                 pass
-                logger.warning('UnicodeEncodeError computing text for hash: %s' % err)
+                logger.warning('UnicodeEncodeError computing '
+                               'text for hash: %s' % err)
             except Exception as err:
                 pass
-                logger.warning('Exception computing text for hash: %s %s' % (type(err), err,))
+                logger.warning('Exception computing text for '
+                               'hash: %s %s' % (type(err), err,))
         sha_hash = hashlib.new('sha1')
         try:
             if isinstance(content, six.text_type):
@@ -240,16 +252,18 @@ class HarSessionMixin(object):
                 if not self.keep_content:
                     self._delete_content(entry)
                 if self.keep_socket_options and len(self._kept_sockopts) > 0:
-                    entry._socketOptions = map(objects.HarSocketOption, self._kept_sockopts)
-                if True: # TODO: make a flag for keeping client options
-                    clientOptions = RequestsCodec().decode_HarClientOptions_from_Session(self)
+                    entry._socketOptions = map(
+                        objects.HarSocketOption, self._kept_sockopts)
+                if True:  # TODO: make a flag for keeping client options
+                    clientOptions = RequestsCodec().\
+                        decode_HarClientOptions_from_Session(self)
                     entry._clientOptions.__dict__.update(clientOptions)
             self._entries.extend(new_entries)
 
-    def _update_entry(self, attr, value, index = -1):
+    def _update_entry(self, attr, value, index=-1):
         try:
             setattr(self._entries[index], attr, value)
-        except Exception as err:
+        except Exception:
             pass
 
     def request(self, method, url, **kwargs):
@@ -271,6 +285,7 @@ class HarSessionMixin(object):
             self._keep_entries(resp)
 
         return resp
+
 
 class HarSession(HarSessionMixin, requests.Session):
 

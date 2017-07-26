@@ -14,12 +14,10 @@ from __future__ import absolute_import
 
 import harlib
 import json
-import six
-import socket
 import unittest
 
 from six.moves import http_client
-from harlib.tests.utils import TestUtils
+from harlib.test_utils import TestUtils
 
 class TestHttplibHTTPResponse(TestUtils):
 

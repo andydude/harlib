@@ -1,7 +1,19 @@
-import six
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# harlib
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
+#
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
+from __future__ import absolute_import
+from datetime import datetime
 from six.moves import http_client
 from six.moves import urllib
+import six
 from harlib import utils
+
 
 class HttplibCodec(object):
 
@@ -9,16 +21,15 @@ class HttplibCodec(object):
     response_class = http_client.HTTPResponse
     modules = [
         'cookielib',
-        'httplib', 
-        'http.client', 
+        'httplib',
+        'http.client',
         'http.cookiejar'
     ]
 
     def __init__(self):
         pass
 
-    ##########################################################################################
-    ## Encoding
+    # Encoding
 
     def encode(self, har, raw_class):
         assert raw_class.__module__ in self.modules
@@ -35,16 +46,27 @@ class HttplibCodec(object):
         resp.will_close = 1 if har._clientOptions.autoClose else 0
 
         return resp
-        
+
     def encode_HarResponse_to_HTTPResponse(self, har):
-        headers = dict(map(utils.pair_from_obj, har.headers))
+        # headers = dict(map(utils.pair_from_obj, har.headers))
+        if har is None:
+            return None
 
         class DummySocket(object):
             bufsize = 1024
-            def close(self): pass
-            def sendall(self, data): pass
-            def readline(self, bufsize=1024): return ''
-            def read(self, bufsize=1024): return ''
+
+            def close(self):
+                pass
+
+            def sendall(self, data):
+                pass
+
+            def readline(self, bufsize=1024):
+                return ''
+
+            def read(self, bufsize=1024):
+                return ''
+
             def makefile(self, mode, bufsize=1024):
                 self.bufsize = bufsize
                 return self
@@ -64,8 +86,7 @@ class HttplibCodec(object):
     def encode_HarResponseBody_to_HTTPResponse(self, har):
         pass
 
-    ##########################################################################################
-    ## Decoding
+    # Decoding
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
@@ -85,7 +106,7 @@ class HttplibCodec(object):
         har['_clientOptions'] = dict()
         har['_clientOptions']['autoClose'] = raw.will_close
         har['_clientOptions']['chunked'] = raw.chunked
-        har['_clientOptions']['failOnError'] = raw.strict
+        # har['_clientOptions']['failOnError'] = raw.strict
         har['_clientOptions']['verbosity'] = raw.debuglevel
         return har
 
@@ -112,10 +133,18 @@ class HttplibCodec(object):
         har['headersSize'] = -1
         har['bodySize'] = -1
 
-        if raw.msg:
-            #har['_statusLineSize'] = int(obj.msg.startofheaders or 0)
-            har['headersSize'] = int(raw.msg.startofbody or 0)
-            har['bodySize'] = int(raw.msg.getheader('content-length')) - har['headersSize']
+        if six.PY3:
+            if raw.headers:
+                # har['headersSize'] = int(raw.headers.startofbody or 0)
+                har['bodySize'] = int(raw.headers.get('content-length'))
+                # har['bodySize'] = har['bodySize'] - har['headersSize']
+                # print(vars(raw.headers))
+        else:
+            if raw.msg:
+                # har['_statusLineSize'] = int(obj.msg.startofheaders or 0)
+                har['headersSize'] = int(raw.msg.startofbody or 0)
+                har['bodySize'] = int(raw.msg.getheader('content-length')) - \
+                    har['headersSize']
 
         return har
 
@@ -123,18 +152,24 @@ class HttplibCodec(object):
         pass
 
     def decode_HarHeaders_from_HTTPResponse(self, raw):
-        return self.decode_HarHeaders_from_HTTPMessage(raw.msg)
+        if six.PY3:
+            return self.decode_HarHeaders_from_HTTPMessage(raw.headers)
+        else:
+            return self.decode_HarHeaders_from_HTTPMessage(raw.msg)
 
     def decode_HarHeaders_from_HTTPMessage(self, raw):
-        headers = map(lambda x: x.strip().split(': ', 1), raw.headers)
+        if six.PY3:
+            headers = raw._headers
+        else:
+            headers = map(lambda x: x.strip().split(': ', 1), raw.headers)
         return headers
-
-    #def decode_HarResponseBody_from_HTTPResponse(self, raw):
-    #    return self.decode_HarResponseBody_from_HTTPMessage(raw.msg)
 
     def decode_HarResponseBody_from_HTTPResponse(self, raw):
         har = self.dict_class()
-        har['mimeType'] = raw.msg.getheader('content-type')
+        if six.PY3:
+            har['mimeType'] = raw.headers.get_content_type()
+        else:
+            har['mimeType'] = raw.msg.getheader('content-type')
         har['text'] = raw.read()
         har['size'] = len(har['text'])
         har['compression'] = -1
@@ -142,29 +177,32 @@ class HttplibCodec(object):
 
     def decore_HarCookie_from_Cookie(self, raw):
         har = self.dict_class()
-        har['name'] = obj.name
-        har['value'] = obj.value
-        har['path'] = obj.path
-        har['domain'] = obj.domain
-        har['expires'] = obj.expires
+        har['name'] = raw.name
+        har['value'] = raw.value
+        har['path'] = raw.path
+        har['domain'] = raw.domain
+        har['expires'] = raw.expires
         har['httpOnly'] = False
-        har['secure'] = obj.secure
+        har['secure'] = raw.secure
         return har
+
 
 class Urllib2Codec(object):
 
     dict_class = dict
     request_class = urllib.request.Request
     response_class = urllib.response.addinfourl
-    modules = ['urllib2', 'urllib']
+    modules = [
+        'urllib2',
+        'urllib',
+        'urllib.request']
     httplib_codec = HttplibCodec()
     http_version = 'HTTP/1.1'
 
     def __init__(self):
         pass
 
-    ##########################################################################################
-    ## Encoding
+    # Encoding
 
     def encode(self, har, raw_class):
         assert raw_class.__module__ in self.modules
@@ -183,17 +221,17 @@ class Urllib2Codec(object):
 
     def encode_HarRequest_to_Request(self, har):
         req = urllib.request.Request(
-            har.url, 
-            har.postData.text, 
+            har.url,
+            har.postData.text,
             har.get_header_dict())
         return req
 
     def encode_HarResponse_to_HTTPResponse(self, har):
-
+        # TODO
+        resp = None
         return resp
 
-    ##########################################################################################
-    ## Decoding
+    # Decoding
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
@@ -202,6 +240,8 @@ class Urllib2Codec(object):
         return getattr(self, method_name)(raw)
 
     def decode_HarEntry_from_addinfourl(self, raw):
+        started = datetime.now().isoformat()
+        timings = {'send': -1, 'wait': -1, 'receive': -1}
         har = self.dict_class()
         har['startedDateTime'] = started
         har['time'] = 0
@@ -213,6 +253,8 @@ class Urllib2Codec(object):
         return har
 
     def decode_HarEntry_from_Request(self, raw):
+        started = datetime.now().isoformat()
+        timings = {'send': -1, 'wait': -1, 'receive': -1}
         har = self.dict_class()
         har['startedDateTime'] = started
         har['time'] = 0
@@ -244,7 +286,8 @@ class Urllib2Codec(object):
         har['status'] = raw.code
         har['statusText'] = http_client.responses.get(raw.code, 'UNKNOWN')
         har['httpVersion'] = self.http_version
-        har['headers'] = self.httplib_codec.decode_HarHeaders_from_HTTPMessage(raw.headers)
+        har['headers'] = self.httplib_codec. \
+            decode_HarHeaders_from_HTTPMessage(raw.headers)
         har['cookies'] = []
         har['content'] = raw
         har['redirectURL'] = raw.url
@@ -261,8 +304,12 @@ class Urllib2Codec(object):
         return har
 
     def decode_HarRequestBody_from_Request(self, raw):
-        if not raw.has_data():
-            return None
+        if six.PY3:
+            if not raw.data:
+                return None
+        else:
+            if not raw.has_data():
+                return None
 
         har = self.dict_class()
         har['mimeType'] = raw.headers.get('Content-Type')
@@ -273,7 +320,6 @@ class Urllib2Codec(object):
             har['params'] = utils.decode_query(query)
         except:
             raise
-            #har['params'] = []
         return har
 
     def decode_HarHeaders_from_Request(self, raw):

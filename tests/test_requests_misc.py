@@ -11,18 +11,11 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-
-import json
 import requests
 import unittest
 import harlib
+from harlib.test_utils import TestUtils
 
-try:
-    import urllib3
-except:
-    from requests.packages import urllib3
-
-from harlib.tests.utils import TestUtils
 
 class TestRequestsPreparedRequest(TestUtils):
 

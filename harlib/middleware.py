@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 '''
 harlib - HTTP Archive (HAR) format library
 '''
@@ -16,6 +16,7 @@ import harlib
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class HarLoggingMiddleware(object):
     '''
@@ -31,8 +32,6 @@ MIDDLEWARE_CLASSES = (
         pass
 
     def process_response(self, request, response):
-        import json
-
         try:
             d = {'startedDateTime': None,
                  'time': 0.0,
@@ -47,6 +46,6 @@ MIDDLEWARE_CLASSES = (
         return response
 
     def process_exception(self, request, exception):
-        #print('process_exception(%s, %s)' % (type(request), type(exception)))
-        #return exception
+        # print('process_exception(%s, %s)' % (type(request), type(exception)))
+        # return exception
         pass
