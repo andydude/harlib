@@ -20,22 +20,22 @@ logger = logging.getLogger(__name__)
 __repo_path__ = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
 __title__ = os.path.basename(__repo_path__)
 (_, _, __version__, __version_tag__) = parse_commit(__repo_path__)
-__homepage_url__ = 'https://github.com/andydude/%s/blob/%s/README.md' % (__title__, __version_tag__)
-__download_url__ = 'https://github.com/andydude/%s/archive/%s.zip' % (__title__, __version_tag__)
+__homepage_url__ = 'https://github.com/andydude/%s/blob/%s/README.md' % (
+    __title__, __version_tag__)
+__download_url__ = 'https://github.com/andydude/%s/archive/%s.zip' % (
+    __title__, __version_tag__)
 
 if __name__ == '__main__':
-    print("title:", __title__)
     print("version:", __version__)
-    print("version_tag:", __version_tag__)
 
 else:
-    # flake8: noqa
+    # flake9: noqa
 
     # only import after installing six
     try:
-        import six  
+        import six
         from .objects import (
-            HarFile, HarLog, 
+            HarFile, HarLog,
             HarObject, HarEntry,
             HarResponse, HarRequest)  # noqa: F401
     except ImportError as err:
@@ -43,9 +43,17 @@ else:
 
     # only import HarSession if requests is installed
     try:
-        import requests  
+        import requests
         from .sessions import (
             HarSessionMixin,
             HarSession)  # noqa: F401
+    except ImportError as err:
+        logger.error(repr(err), exc_info=True)
+
+    # only import if django is installed
+    try:
+        import django
+        import harlib_viewer as viewer
+        from harlib_viewer import middleware
     except ImportError as err:
         logger.error(repr(err), exc_info=True)

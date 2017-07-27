@@ -9,20 +9,14 @@
 # modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from requests.packages import urllib3 as urllib3r
 import harlib
 import json
-import requests
 import six
 from six.moves import http_client
 from harlib.codecs.httplib import HttplibCodec
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-
-# flake8: noqa
-
+from ..compat import OrderedDict
+from ..compat import requests
+from ..compat import urllib3r
 
 KEEP_SIZE = False
 DEFAULT_VERSION = 'HTTP/0'
@@ -31,10 +25,7 @@ DEFAULT_VERSION = 'HTTP/0'
 def separate(iterable):
     first = True
     last = False
-    try:
-        length = len(iterable)
-    except:
-        length = len(list(iterable))
+    length = len(list(iterable))
     separated = []
     for index, value in enumerate(iterable):
         if index == length - 1:

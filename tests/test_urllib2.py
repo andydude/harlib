@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 '''
 harlib - HTTP Archive (HAR) format library
 '''
@@ -36,11 +36,12 @@ class TestUrllib2Request(TestUtils):
     Request = staticmethod(urllib.request.Request)
 
     def setUp(self):
-        self.req = self.Request('http://httpbin.org/post',
-                                data='username=bob&password=yes',
-                                headers={'Accept': '*/*', 'Content-Type':
-                                         'application/x-www-form-urlencoded'})
-        
+        self.req = self.Request(
+            'http://httpbin.org/post',
+            data='username=bob&password=yes',
+            headers={'Accept': '*/*', 'Content-Type':
+                     'application/x-www-form-urlencoded'})
+
     def test_1_from_urllib2(self):
 
         har_req = harlib.HarRequest(self.req)
@@ -81,10 +82,10 @@ class TestUrllib2Response(TestUtils):
                                 data=b'username=bob&password=yes',
                                 headers={'Accept': '*/*', 'Content-Type':
                                          'application/x-www-form-urlencoded'})
-        
+
     def test_1_from_urllib2(self):
         resp = urllib.request.urlopen(self.req)
-        
+
         self.assertTrue(isinstance(resp,
                                    (urllib.response.addinfourl,  # PY2
                                     http_client.HTTPResponse)),  # PY3
@@ -104,9 +105,11 @@ class TestUrllib2Response(TestUtils):
         # self.assertEqual(json_resp['headers']['Connection'], 'close')
         self.assertEqual(json_resp['headers']['Host'], 'httpbin.org')
         if six.PY3:
-            self.assertEqual(json_resp['headers']['User-Agent'], 'Python-urllib/3.6')
+            self.assertEqual(json_resp['headers']['User-Agent'],
+                             'Python-urllib/3.6')
         else:
-            self.assertEqual(json_resp['headers']['User-Agent'], 'Python-urllib/2.7')
+            self.assertEqual(json_resp['headers']['User-Agent'],
+                             'Python-urllib/2.7')
         self.assertEqual(json_resp['headers']['Content-Type'],
                          'application/x-www-form-urlencoded')
 

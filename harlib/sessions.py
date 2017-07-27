@@ -10,15 +10,19 @@
 from __future__ import absolute_import
 import logging
 import os
-import requests
 import hashlib
 import six
-from harlib.codecs.requests import RequestsCodec
-from . import objects, utils
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+try:
+    import requests
+except ImportError:
+    from botocore.vendored import requests
+
+from harlib.codecs.requests import RequestsCodec
+from . import objects, utils
 
 try:
     from requests.adapters import DEFAULT_STREAM
@@ -27,7 +31,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# flake8: noqa
+# flake9: noqa
 
 
 class HarSocketManager(object):

@@ -13,15 +13,14 @@ harlib - HTTP Archive (HAR) format library
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import print_function
-from botocore.vendored import requests
 from botocore.awsrequest import (
     AWSRequest, AWSPreparedRequest)
-from botocore.vendored.requests.models import (
-    PreparedRequest, Request, Response)
-from botocore.vendored.requests.sessions import Session
+# from botocore.vendored.requests.sessions import Session
+# from botocore.vendored import requests
+# from botocore.vendored.requests.models import (
+#    PreparedRequest, Request, Response)
+from harlib.objects import HarRequest
 from harlib.test_utils import TestUtils
-from harlib.objects import (
-    HarEntry, HarRequest, HarResponse)
 
 
 class AWSRequestTests(TestUtils):

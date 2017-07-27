@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
+#
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 '''
 harlib - HTTP Archive (HAR) format library
 '''
@@ -17,38 +17,33 @@ import unittest
 import harlib
 from harlib.test_utils import TestUtils
 
-# try:
-#     import urllib3
-# except:
-#     from requests.packages import urllib3
-
 
 class TestRequestsResponse(TestUtils):
 
     def setUp(self):
-        self.resp = requests.post('http://httpbin.org/post',
-                                  data={'username': 'bob', 'password': 'yes'},
-                                  headers={'X-File': 'requests'})
-    def tearDown(self):
-        pass
+        self.resp = requests.post(
+            'http://httpbin.org/post',
+            data={'username': 'bob', 'password': 'yes'},
+            headers={'X-File': 'requests'})
 
     def test_1_from_requests(self):
         har_resp = harlib.HarResponse(self.resp)
-        #print(har_resp.dumps())
 
         self.assertEqual(har_resp.status, self.resp.status_code)
         self.assertEqual(har_resp.statusText, self.resp.reason)
         self.assertEqual(har_resp.httpVersion, "HTTP/1.1")
-        self.assertEqual(har_resp.get_header("Content-Type"), "application/json")
-        self.assertEqual(har_resp.content.mimeType, "application/json")
-        
+        self.assertEqual(har_resp.get_header("Content-Type"),
+                         "application/json")
+        self.assertEqual(har_resp.content.mimeType,
+                         "application/json")
+
         json_resp = json.loads(har_resp.content.text)
-        #print(har_resp.content.text)
-        #self.assertEqual(json_resp["headers"]["Connection"], "close")
+
+        # self.assertEqual(json_resp["headers"]["Connection"], "close")
         self.assertEqual(json_resp["url"], "http://httpbin.org/post")
         self.assertEqual(json_resp["headers"]["Host"], "httpbin.org")
         self.assertEqual(json_resp["headers"]["X-File"], "requests")
-        self.assertEqual(json_resp["headers"]["Content-Type"], 
+        self.assertEqual(json_resp["headers"]["Content-Type"],
                          "application/x-www-form-urlencoded")
         self.assertTrue(json_resp["headers"]["User-Agent"]
                         .startswith("python-requests"))
@@ -58,28 +53,6 @@ class TestRequestsResponse(TestUtils):
         to_resp = har_resp.encode(requests.Response)
         self.assertEqualResponse(to_resp, self.resp)
 
-
-#class TestRequestsSession(unittest.TestCase):
-#
-#    def setUp(self):
-#        pass
-#
-#    def tearDown(self):
-#        pass
-#
-#    def testNone(self):
-#        self.assertTrue(True)
-#
-#
-#
-#    def test_1_from_requests():
-#
-#    def test_1_to_json
-#    def test_1_from_json
-#    def test_1_to_urllib3
-#    def test_1_from_urllib3
-#    def test_1_to_django
-#    def test_1_from_django
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
