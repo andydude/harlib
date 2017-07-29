@@ -58,20 +58,20 @@ class TestRequestsResponse2(TestUtils):
         self.assertEqual(har_resp.status, self.resp.status_code)
         self.assertEqual(har_resp.status, self.resp.status_code)
         self.assertEqual(har_resp.statusText, self.resp.reason)
-        self.assertEqual(har_resp.httpVersion, "HTTP/1.1")
-        self.assertEqual(har_resp.get_header("Content-Type"),
-                         "application/json")
-        self.assertEqual(har_resp.content.mimeType, "application/json")
+        self.assertEqual(har_resp.httpVersion, 'HTTP/1.1')
+        self.assertEqual(har_resp.get_header('Content-Type'),
+                         'application/json')
+        self.assertEqual(har_resp.content.mimeType, 'application/json')
 
         json_resp = json.loads(har_resp.content.text)
-        # self.assertEqual(json_resp["headers"]["Connection"], "keep-alive")
-        self.assertEqual(json_resp["url"], "http://httpbin.org/post")
-        self.assertEqual(json_resp["headers"]["Host"], "httpbin.org")
-        self.assertEqual(json_resp["headers"]["X-File"], "requests")
-        self.assertEqual(json_resp["headers"]["Content-Type"],
-                         "application/x-www-form-urlencoded")
-        self.assertTrue(json_resp["headers"]["User-Agent"]
-                        .startswith("python-requests"))
+
+        self.assertEqual(json_resp['url'], 'http://httpbin.org/post')
+        self.assertEqual(json_resp['headers']['Host'], 'httpbin.org')
+        self.assertEqual(json_resp['headers']['X-File'], 'requests')
+        self.assertEqual(json_resp['headers']['Content-Type'],
+                         'application/x-www-form-urlencoded')
+        self.assertTrue(json_resp['headers']['User-Agent']
+                        .startswith('python-requests'))
 
     # def test_2_to_requests(self):
     #     har_resp = harlib.HarEntry(self.resp)

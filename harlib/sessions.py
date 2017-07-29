@@ -12,26 +12,13 @@ import logging
 import os
 import hashlib
 import six
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-try:
-    import requests
-except ImportError:
-    from botocore.vendored import requests
-
-from harlib.codecs.requests import RequestsCodec
+from .codecs.requests import RequestsCodec
+from .compat import OrderedDict
+from .compat import requests
+from .compat import DEFAULT_STREAM
 from . import objects, utils
 
-try:
-    from requests.adapters import DEFAULT_STREAM
-except ImportError:
-    DEFAULT_STREAM = False
-
 logger = logging.getLogger(__name__)
-
-# flake9: noqa
 
 
 class HarSocketManager(object):
@@ -178,44 +165,40 @@ class HarSessionMixin(object):
         except:
             pass
 
+    def get_content_hash_from_request(self, request, writer):
+        writer.write(request.method)
+        writer.write(request.url)
+        try:
+            writer.write(six.text_type(request.postData.text))
+        except Exception as err:
+            pass
+        try:
+            writer.write(six.text_type(request.headers))
+        except Exception as err:
+            pass
+
+    def get_content_hash_from_response(self, response, writer):
+        writer.write(six.text_type(response.status))
+        try:
+            writer.write(six.text_type(response.content.encoding))
+        except AttributeError as err:
+            pass
+        try:
+            if isinstance(response.content.text, six.text_type):
+                writer.write(response.content.text)
+            else:
+                writer.write(response.content.text.decode(
+                    'latin1', 'ignore'))
+        except Exception as err:
+            pass
+
     def get_content_hash(self):
         content = ''
-        content_without_reponse_text = ''
+        writer = six.StringIO()
         for entry in self._entries:
-            content_without_reponse_text += entry.request.method
-            content_without_reponse_text += entry.request.url
-            try:
-                content_without_reponse_text += str(
-                    entry.request.postData.text)
-            except Exception as err:
-                pass
-            try:
-                content_without_reponse_text += str(entry.request.headers)
-            except Exception as err:
-                pass
-            content_without_reponse_text += str(entry.response.status)
-            try:
-                content_without_reponse_text += str(
-                    entry.response.content.encoding)
-            except AttributeError as err:
-                pass
-            content = content_without_reponse_text
-            try:
-                if isinstance(entry.response.content.text, six.text_type):
-                    content += entry.response.content.text.encode(
-                        'latin1', 'ignore')
-                else:
-                    content += entry.response.content.text
-            except AttributeError as err:
-                pass
-            except UnicodeEncodeError as err:
-                pass
-                logger.warning('UnicodeEncodeError computing '
-                               'text for hash: %s' % err)
-            except Exception as err:
-                pass
-                logger.warning('Exception computing text for '
-                               'hash: %s %s' % (type(err), err,))
+            self.get_content_hash_from_request(entry.request, writer)
+            self.get_content_hash_from_response(entry.response, writer)
+        content = writer.getvalue().encode('latin1', 'ignore')
         sha_hash = hashlib.new('sha1')
         try:
             if isinstance(content, six.text_type):
@@ -224,9 +207,8 @@ class HarSessionMixin(object):
                 sha_hash.update(content)
         except UnicodeEncodeError as ex:
             logger.warning('UnicodeEncodeError generating hash: %s' % ex)
-            sha_hash.update(content_without_reponse_text)
         sha_hash_digest = sha_hash.hexdigest()
-        del content_without_reponse_text
+        del writer
         del content
         return sha_hash_digest
 

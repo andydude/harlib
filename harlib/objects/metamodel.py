@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from metaobject import MetaObject
 import logging
 import harlib.codecs
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from harlib.compat import OrderedDict
 
 logger = logging.getLogger(__name__)
 

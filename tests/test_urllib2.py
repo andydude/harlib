@@ -16,7 +16,6 @@ from __future__ import unicode_literals
 import json
 import unittest
 import harlib
-import six
 from six.moves import http_client
 from six.moves import urllib
 from harlib.test_utils import TestUtils
@@ -78,10 +77,11 @@ class TestUrllib2Response(TestUtils):
     Request = staticmethod(urllib.request.Request)
 
     def setUp(self):
-        self.req = self.Request('http://httpbin.org/post',
-                                data=b'username=bob&password=yes',
-                                headers={'Accept': '*/*', 'Content-Type':
-                                         'application/x-www-form-urlencoded'})
+        self.req = self.Request(
+            'http://httpbin.org/post',
+            data=b'username=bob&password=yes',
+            headers={'Accept': '*/*', 'Content-Type':
+                     'application/x-www-form-urlencoded'})
 
     def test_1_from_urllib2(self):
         resp = urllib.request.urlopen(self.req)
@@ -104,14 +104,23 @@ class TestUrllib2Response(TestUtils):
         self.assertEqual(json_resp['headers']['Accept-Encoding'], 'identity')
         # self.assertEqual(json_resp['headers']['Connection'], 'close')
         self.assertEqual(json_resp['headers']['Host'], 'httpbin.org')
-        if six.PY3:
-            self.assertEqual(json_resp['headers']['User-Agent'],
-                             'Python-urllib/3.6')
-        else:
-            self.assertEqual(json_resp['headers']['User-Agent'],
-                             'Python-urllib/2.7')
+        self.assertTrue(json_resp['headers']['User-Agent']
+                        .lower().startswith('python-urllib'),
+                        json_resp['headers']['User-Agent'])
         self.assertEqual(json_resp['headers']['Content-Type'],
                          'application/x-www-form-urlencoded')
+
+    def test_2_from_urllib2_error(self):
+        from six.moves.urllib.error import URLError
+
+        req = self.Request(
+            'http://nonexistant.example.com/post',
+            data=b'username=bob&password=yes',
+            headers={'Accept': '*/*', 'Content-Type':
+                     'application/x-www-form-urlencoded'})
+
+        with self.assertRaises(URLError):
+            _ = urllib.request.urlopen(req)
 
 
 if __name__ == '__main__':

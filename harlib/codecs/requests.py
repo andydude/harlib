@@ -198,6 +198,14 @@ class RequestsCodec(object):
         method_name = 'encode_%s_to_%s' % (har_type, raw_type)
         return getattr(self, method_name)(har)
 
+    def encode_HarLog_to_Response(self, har):
+        most = har.entries[:-1]
+        most = list(map(self.encode_HarEntry_to_Response, most))
+        last = har.entries[-1]
+        last = self.encode_HarEntry_to_Response(last)
+        last.history = most
+        return last
+
     def encode_HarEntry_to_Request(self, har):
         return self.encode_HarRequest_to_Request(self, har.request)
 
@@ -532,7 +540,7 @@ class RequestsCodec(object):
         decode_HarQueryStringParams_from_Request
     decode_HarQueryStringParams_from_AWSPreparedRequest = \
         decode_HarQueryStringParams_from_PreparedRequest
-    
+
     decode_HarRequest_from_AWSRequest = decode_HarRequest_from_Request
     decode_HarRequest_from_AWSPreparedRequest = decode_HarRequest_from_Request
     decode_HarRequest_from_PreparedRequest = decode_HarRequest_from_Request
@@ -557,7 +565,7 @@ class RequestsCodec(object):
         value = raw[1]
         if isinstance(value, six.text_type):
             value = value.encode('utf-8')
-            
+
         io.write(b'\t\t{')
         io.write(b'"name": "' + six.binary_type(name) + b'", ')
         io.write(b'"value": "' + six.binary_type(value) + b'"')
@@ -625,7 +633,7 @@ class RequestsCodec(object):
         ctype = raw.headers.get('content-type')
         if isinstance(ctype, six.text_type):
             ctype = ctype.encode('utf-8')
-            
+
         io.write(b'\t],\n')
         io.write(b'\t"queryString": [\n')
         io.write(b'\t],\n')
@@ -687,7 +695,7 @@ class RequestsCodec(object):
         reason = err.strerror
         if isinstance(reason, six.text_type):
             reason = reason.encode('utf-8')
-            
+
         # usually 4 tabs, omitted
         io.write(b'"response": {\n')
         io.write(b'\t"status": ' + six.binary_type(err.errno) + b',\n')
@@ -749,7 +757,7 @@ class RequestsCodec(object):
         ctype = raw.headers.get('content-type')
         if isinstance(ctype, six.text_type):
             ctype = ctype.encode('utf-8')
-            
+
         io.write(b'\t],\n')
         io.write(b'\t"content": {\n')
         io.write(b'\t\t"mimeType": "' + six.binary_type(ctype) + b'",\n')

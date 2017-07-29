@@ -99,8 +99,10 @@ class HarUtilsMixin(object):
         self.assertEqual(req.hooks, req2.hooks, msg=None)
 
     def assertEqualPreparedRequest(self, req, req2, msg=None):
-        self.assertEqual(req2.__class__, requests.PreparedRequest)
-        self.assertEqual(req.__class__, requests.PreparedRequest)
+        self.assertEqual(req2.__class__, requests.PreparedRequest,
+                         "types %s %s" % (type(req), type(req2)))
+        self.assertEqual(req.__class__, requests.PreparedRequest,
+                         "types %s %s" % (type(req), type(req2)))
         self.assertEqual(req.method, req2.method, msg=None)
         self.assertEqual(req.url, req2.url, msg=None)
         self.assertEqual(req.headers, req2.headers, msg=None)
@@ -119,8 +121,6 @@ class HarUtilsMixin(object):
     def assertEqualHeaders(self, headers, headers2, msg=None):
         self.assertEqual(headers.__class__, headers2.__class__, msg)
         self.assertEqual(len(headers), len(headers2), msg)
-        if len(headers) != len(headers2):
-            return
         keys = sorted(headers.keys())
         keys2 = sorted(headers2.keys())
         for i in six.moves.range(len(headers)):
@@ -131,11 +131,13 @@ class HarUtilsMixin(object):
         # self.assertEqual(headers, headers2)
 
     def assertEqualHistory(self, history, history2, msg=None):
-        self.assertEqual(len(history), len(history2), msg)
-        if len(history) != len(history2):
+        if hasattr(self, 'within_history') and self.within_history:
             return
+        self.assertEqual(len(history), len(history2), msg)
+        self.within_history = True
         for i in six.moves.range(len(history)):
-            self.assertEqualPreparedRequest(history[i], history2[i], msg)
+            self.assertEqualResponse(history[i], history2[i], msg)
+        self.within_history = False
 
 
 class TestUtils(unittest.TestCase, HarUtilsMixin):

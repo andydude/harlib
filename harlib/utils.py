@@ -16,12 +16,7 @@ import struct
 import json
 import six
 from collections import Mapping
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-    
-# flake8: noqa
+from .compat import OrderedDict
 
 
 def render_http_version(num):
@@ -35,7 +30,7 @@ def parse_http_version(s):
     '''
     Function from .httpVersion to ._httpVersionNumber
     '''
-    return int(float(s.split('/', 1)[1])*10.0)
+    return int(float(s.split('/', 1)[1]) * 10.0)
 
 
 def parse_pair(item):
