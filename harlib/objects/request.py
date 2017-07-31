@@ -10,7 +10,6 @@
 from __future__ import absolute_import
 from collections import Mapping
 from .metamodel import HarObject
-
 from .messages import (
     HarCookie,
     HarHeader,
@@ -19,6 +18,11 @@ from .messages import (
     HarMessageBody,
     HarMessage,
 )
+
+try:
+    from typing import Any, Dict, List, NamedTuple, Optional
+except ImportError:
+    pass
 
 
 class HarRequestBody(HarMessageBody):
@@ -44,6 +48,7 @@ class HarRequestBody(HarMessageBody):
     }
 
     def __init__(self, obj=None):
+        # type: (Dict) -> None
         har = obj or None
 
         if isinstance(obj, Mapping):
@@ -57,7 +62,26 @@ class HarRequestBody(HarMessageBody):
 
 
 class HarRequest(HarMessage):
-
+    # type: NamedTuple('HarRequest', [
+    #     ('method', str),
+    #     ('url', str),
+    #     ('cookies', List[HarCookie]),
+    #     ('headers', List[HarHeader]),
+    #     ('queryString', List[HarQueryStringParam]),
+    #     ('httpVersion', str),
+    #     ('headersSize', int),
+    #     ('bodySize', int),
+    #     ('postData', HarRequestBody),
+    #     ('_requestLine', str),
+    #     ('_requestLineSize', str),
+    #     ('_endpointID', str),
+    #     ('_originURL', str),
+    #     ('_required', List[str]),
+    #     ('_optional', Dict[str, Any]),
+    #     ('_types', Dict[str, Any]),
+    #     ('_ordered', List[str]),
+    # ])
+    
     _required = [
         'method',
         'url',
@@ -105,6 +129,7 @@ class HarRequest(HarMessage):
     ]
 
     def __init__(self, obj=None):
+        # type: (Dict) -> None
         har = obj or None
 
         if isinstance(obj, Mapping):
@@ -118,15 +143,18 @@ class HarRequest(HarMessage):
 
     @property
     def size(self):
+        # type: () -> int
         return self.headersSize + self.bodySize
 
     def get_param(self, name, default=None):
+        # type: (str, str) -> Optional[str]
         for param in self.queryString:
             if param.name == name:
                 return param.value
         return default
 
     def post_param(self, name, default=None):
+        # type: (str, str) -> Optional[str]
         for param in self.postData.params:
             if param.name == name:
                 return param

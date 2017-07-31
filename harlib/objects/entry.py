@@ -223,12 +223,12 @@ class HarEntry(HarObject):
             try:
                 del d['request']['postData']['text']
                 del d['request']['postData']['encoding']
-            except:
+            except Exception:
                 pass
             try:
                 del d['response']['content']['text']
                 del d['response']['content']['encoding']
-            except:
+            except Exception:
                 pass
         return d
 

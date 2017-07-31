@@ -17,7 +17,7 @@ import json
 import unittest
 
 from six.moves import http_client
-from harlib.test_utils import TestUtils
+from harlib.test_utils import TestUtils, HTTPBIN_ORIGIN
 
 
 class TestHttplibHTTPResponse(TestUtils):
@@ -26,8 +26,9 @@ class TestHttplibHTTPResponse(TestUtils):
 
     def setUp(self):
         ConnectionCls = http_client.HTTPConnection
-        # self.sock = self.Socket(("httpbin.org", 80), self.timeout)
-        self.conn = ConnectionCls("httpbin.org")
+        host = HTTPBIN_ORIGIN.split('/')[-1]
+        # self.sock = self.Socket((host, 80), self.timeout)
+        self.conn = ConnectionCls(host)
 
     def tearDown(self):
         self.conn.close()
@@ -48,9 +49,10 @@ class TestHttplibHTTPResponse(TestUtils):
 
         json_resp = json.loads(har_resp.content.text)
 
-        self.assertEqual(json_resp["url"], "http://httpbin.org/get")
+        host = HTTPBIN_ORIGIN.split('/')[-1]
+        self.assertEqual(json_resp["url"], "%s/get" % HTTPBIN_ORIGIN)
         self.assertEqual(json_resp["headers"]["Accept-Encoding"], "identity")
-        self.assertEqual(json_resp["headers"]["Host"], "httpbin.org")
+        self.assertEqual(json_resp["headers"]["Host"], host)
         # self.assertEqual(json_resp["headers"]["Connection"], "close")
         # self.assertEqual(har_resp.cookies, [])
         # self.assertEqual(har_resp.redirectURL, "")
@@ -89,8 +91,9 @@ class TestHttplibHTTPResponse(TestUtils):
 #    timeout = socket._GLOBAL_DEFAULT_TIMEOUT
 #
 #    def setUp(self):
-#        #self.sock = self.Socket(("httpbin.org", 80), self.timeout)
-#        self.conn = self.Connection("httpbin.org")
+#        host = HTTPBIN_ORIGIN.split('/')[-1]
+#        #self.sock = self.Socket((host, 80), self.timeout)
+#        self.conn = self.Connection(host)
 #
 #    def tearDown(self):
 #        self.conn.close()

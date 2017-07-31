@@ -18,14 +18,15 @@ import unittest
 import harlib
 from six.moves import http_client
 from six.moves import urllib
-from harlib.test_utils import TestUtils
+from harlib.test_utils import TestUtils, EXAMPLE_ORIGIN, HTTPBIN_ORIGIN
 
 
 class TestUrllib2OpenerDirector(TestUtils):
     Opener = staticmethod(urllib.request.OpenerDirector)
 
     def setUp(self):
-        self.req = self.Connection('httpbin.org')
+        host = HTTPBIN_ORIGIN.split('/')[-1]
+        self.req = self.Connection(host)
 
     def tearDown(self):
         pass
@@ -36,7 +37,7 @@ class TestUrllib2Request(TestUtils):
 
     def setUp(self):
         self.req = self.Request(
-            'http://httpbin.org/post',
+            '%s/post' % HTTPBIN_ORIGIN,
             data='username=bob&password=yes',
             headers={'Accept': '*/*', 'Content-Type':
                      'application/x-www-form-urlencoded'})
@@ -45,7 +46,7 @@ class TestUrllib2Request(TestUtils):
 
         har_req = harlib.HarRequest(self.req)
         self.assertEqual(har_req.method, 'POST')
-        self.assertEqual(har_req.url, 'http://httpbin.org/post')
+        self.assertEqual(har_req.url, '%s/post' % HTTPBIN_ORIGIN)
         self.assertEqual(har_req.httpVersion, 'HTTP/1.1')
         self.assertEqual(har_req.get_header('Accept'), '*/*')
         self.assertEqual(har_req.get_header('Content-Type'),
@@ -78,7 +79,7 @@ class TestUrllib2Response(TestUtils):
 
     def setUp(self):
         self.req = self.Request(
-            'http://httpbin.org/post',
+            '%s/post' % HTTPBIN_ORIGIN,
             data=b'username=bob&password=yes',
             headers={'Accept': '*/*', 'Content-Type':
                      'application/x-www-form-urlencoded'})
@@ -99,11 +100,13 @@ class TestUrllib2Response(TestUtils):
                          'application/json')
 
         json_resp = json.loads(har_resp.content.text)
-        self.assertEqual(json_resp['url'], 'http://httpbin.org/post')
+
+        host = HTTPBIN_ORIGIN.split('/')[-1]
+        self.assertEqual(json_resp['url'], '%s/post' % HTTPBIN_ORIGIN)
         self.assertEqual(json_resp['headers']['Accept'], '*/*')
         self.assertEqual(json_resp['headers']['Accept-Encoding'], 'identity')
         # self.assertEqual(json_resp['headers']['Connection'], 'close')
-        self.assertEqual(json_resp['headers']['Host'], 'httpbin.org')
+        self.assertEqual(json_resp['headers']['Host'], host)
         self.assertTrue(json_resp['headers']['User-Agent']
                         .lower().startswith('python-urllib'),
                         json_resp['headers']['User-Agent'])
@@ -114,13 +117,13 @@ class TestUrllib2Response(TestUtils):
         from six.moves.urllib.error import URLError
 
         req = self.Request(
-            'http://nonexistant.example.com/post',
+            '%s/post' % EXAMPLE_ORIGIN,
             data=b'username=bob&password=yes',
             headers={'Accept': '*/*', 'Content-Type':
                      'application/x-www-form-urlencoded'})
 
         with self.assertRaises(URLError):
-            _ = urllib.request.urlopen(req)
+            urllib.request.urlopen(req)
 
 
 if __name__ == '__main__':

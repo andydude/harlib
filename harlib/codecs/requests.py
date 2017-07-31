@@ -113,7 +113,7 @@ class Urllib3Codec(object):
         har['statusText'] = raw.reason
         try:
             har['httpVersion'] = harlib.utils.render_http_version(raw.version)
-        except:
+        except Exception:
             har['httpVersion'] = DEFAULT_VERSION
 
         har['headers'] = list(raw.headers.items())
@@ -128,7 +128,7 @@ class Urllib3Codec(object):
                                           har['headers']))
                 har['headersSize'] = len(headers + '\r\n\r\n')
                 har['bodySize'] = len(har['content']['text'])
-            except:
+            except Exception:
                 har['headersSize'] = -1
                 har['bodySize'] = -1
         else:
@@ -142,7 +142,7 @@ class Urllib3Codec(object):
         har['mimeType'] = raw.headers.get('content-type')
         try:
             text = raw.data
-        except:
+        except Exception:
             text = ''
 
         har['text'] = text
@@ -337,7 +337,7 @@ class RequestsCodec(object):
         try:
             har['_clientOptions'] = \
                 self.decode_HarClientOptions_from_Response(raw)
-        except:
+        except Exception:
             pass
         return har
 
@@ -353,11 +353,11 @@ class RequestsCodec(object):
         proxies = self.dict_class()
         try:
             proxies['http'] = raw.adapters['http://'].proxy_manager.keys()[0]
-        except:
+        except Exception:
             pass
         try:
             proxies['https'] = raw.adapters['https://'].proxy_manager.keys()[0]
-        except:
+        except Exception:
             pass
         har['proxies'] = proxies
         return har
@@ -369,7 +369,7 @@ class RequestsCodec(object):
         try:
             har['httpVersion'] = \
                 harlib.utils.render_http_version(raw.raw.version)
-        except:
+        except Exception:
             har['httpVersion'] = DEFAULT_VERSION
 
         har['headers'] = list(raw.headers.lower_items())
@@ -382,7 +382,7 @@ class RequestsCodec(object):
             headers = '\r\n'.join(map(from_pair, har['headers']))
             har['headersSize'] = len(headers + '\r\n\r\n')
             har['bodySize'] = len(har['content']['text'])
-        except:
+        except Exception:
             har['headersSize'] = -1
             har['bodySize'] = -1
 
@@ -398,7 +398,7 @@ class RequestsCodec(object):
         har['mimeType'] = raw.headers.get('content-type')
         try:
             text = raw.text
-        except:
+        except Exception:
             text = ''
 
         har['text'] = text
@@ -447,7 +447,7 @@ class RequestsCodec(object):
             headers = '\r\n'.join(map(from_pair, har['headers']))
             har['headersSize'] = len(headers + '\r\n\r\n')
             har['bodySize'] = len(har['postData']['text'])
-        except:
+        except Exception:
             har['headersSize'] = -1
             har['bodySize'] = -1
 
@@ -478,7 +478,7 @@ class RequestsCodec(object):
         har['mimeType'] = 'UNKNOWN'
         try:
             har['text'] = harlib.utils.encode_query(body_params)
-        except:
+        except Exception:
             har['text'] = ''
         har['_size'] = len(har['text'])
 
@@ -533,7 +533,7 @@ class RequestsCodec(object):
         try:
             query = '?' + raw.url.split('?', 1)[1]
             return harlib.utils.decode_query(query)
-        except:
+        except Exception:
             return []
 
     decode_HarQueryStringParams_from_AWSRequest = \
@@ -790,7 +790,7 @@ class RequestsCodec(object):
         started = datetime.now().isoformat().encode('utf-8')
         try:
             total = raw.elapsed.total_seconds() * 1000.0
-        except:
+        except Exception:
             total = 0
         total = str(total).encode('utf-8')
 

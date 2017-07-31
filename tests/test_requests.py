@@ -14,7 +14,7 @@ from __future__ import absolute_import
 import json
 import unittest
 import harlib
-from harlib.test_utils import TestUtils
+from harlib.test_utils import TestUtils, EXAMPLE_ORIGIN, HTTPBIN_ORIGIN
 from harlib.compat import requests
 from harlib.compat import Request
 from harlib.compat import RequestException
@@ -24,7 +24,7 @@ class TestRequestsResponse(TestUtils):
 
     def setUp(self):
         self.resp = requests.post(
-            'http://httpbin.org/post',
+            '%s/post' % HTTPBIN_ORIGIN,
             data={'username': 'bob', 'password': 'yes'},
             headers={'X-File': 'requests'})
 
@@ -41,9 +41,10 @@ class TestRequestsResponse(TestUtils):
 
         json_resp = json.loads(har_resp.content.text)
 
+        host = HTTPBIN_ORIGIN.split('/')[-1]
         # self.assertEqual(json_resp['headers']['Connection'], 'close')
-        self.assertEqual(json_resp['url'], 'http://httpbin.org/post')
-        self.assertEqual(json_resp['headers']['Host'], 'httpbin.org')
+        self.assertEqual(json_resp['url'], '%s/post' % HTTPBIN_ORIGIN)
+        self.assertEqual(json_resp['headers']['Host'], host)
         self.assertEqual(json_resp['headers']['X-File'], 'requests')
         self.assertEqual(json_resp['headers']['Content-Type'],
                          'application/x-www-form-urlencoded')
@@ -59,16 +60,16 @@ class TestRequestsResponse(TestUtils):
 
         req = Request(
             method='GET',
-            url='http://nonexistant.example.com/get')
+            url='%s/get' % EXAMPLE_ORIGIN)
 
         with self.assertRaises(RequestException):
-            _ = requests.request(**vars(req))
+            requests.request(**vars(req))
 
     def test_4_from_requests_redirect(self):
 
         req = Request(
             method='GET',
-            url='http://httpbin.org/redirect/2')
+            url='%s/redirect/2' % HTTPBIN_ORIGIN)
 
         resp = requests.request(**vars(req))
         har_log = harlib.HarLog(resp)

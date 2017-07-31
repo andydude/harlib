@@ -18,6 +18,8 @@ import six
 import unittest
 import urllib3
 
+HTTPBIN_ORIGIN = 'http://eu.httpbin.org'
+EXAMPLE_ORIGIN = 'http://nonexistant.example.com'
 
 class HarUtilsMixin(object):
 

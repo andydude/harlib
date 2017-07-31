@@ -14,14 +14,14 @@ from __future__ import absolute_import
 import requests
 import unittest
 import harlib
-from harlib.test_utils import TestUtils
+from harlib.test_utils import TestUtils, HTTPBIN_ORIGIN
 
 
 class TestRequestsPreparedRequest(TestUtils):
 
     def setUp(self):
         self.req = requests.Request(
-            'POST', 'http://httpbin.org/post',
+            'POST', '%s/post' % HTTPBIN_ORIGIN,
             data={'username': 'bob', 'password': 'yes'},
             headers={'X-File': 'requests'})
         self.preq = self.req.prepare()
@@ -47,13 +47,13 @@ class TestRequestsRequest(TestUtils):
 
     def setUp(self):
         self.req = requests.Request(
-            'POST', 'http://httpbin.org/post',
+            'POST', '%s/post' % HTTPBIN_ORIGIN,
             data={'username': 'bob', 'password': 'yes'},
             headers={'X-File': 'requests'})
 
     def test_1_from_requests(self):
         req = requests.Request(
-            'GET',  'http://httpbin.org/get',
+            'GET',  '%s/get' % HTTPBIN_ORIGIN,
             params={'username': 'bob', 'password': 'yes'})
         har_req = harlib.HarRequest(req)
 

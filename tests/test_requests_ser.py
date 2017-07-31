@@ -15,7 +15,7 @@ import json
 import requests
 import unittest
 import harlib.api
-from harlib.test_utils import TestUtils
+from harlib.test_utils import TestUtils, HTTPBIN_ORIGIN
 
 
 def response_from_exception(err):
@@ -35,7 +35,7 @@ class TestRequestsResponse2(TestUtils):
 
     def setUp(self):
         try:
-            self.resp = requests.post('http://httpbin.org/post',
+            self.resp = requests.post('%s/post' % HTTPBIN_ORIGIN,
                                       data={'username': 'bob',
                                             'password': 'yes'},
                                       headers={'X-File': 'requests'})
@@ -65,8 +65,9 @@ class TestRequestsResponse2(TestUtils):
 
         json_resp = json.loads(har_resp.content.text)
 
-        self.assertEqual(json_resp['url'], 'http://httpbin.org/post')
-        self.assertEqual(json_resp['headers']['Host'], 'httpbin.org')
+        host = HTTPBIN_ORIGIN.split('/')[-1]
+        self.assertEqual(json_resp['url'], '%s/post' % HTTPBIN_ORIGIN)
+        self.assertEqual(json_resp['headers']['Host'], host)
         self.assertEqual(json_resp['headers']['X-File'], 'requests')
         self.assertEqual(json_resp['headers']['Content-Type'],
                          'application/x-www-form-urlencoded')

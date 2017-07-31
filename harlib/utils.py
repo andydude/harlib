@@ -82,7 +82,7 @@ def decode_multipart(o, content_type, **kwargs):
                 else:  # TODO: Big form-fields are in the files dict. really?
                     param = {'name': part.name, 'value': str(part.value)}
                 har.append(param)
-    except:
+    except Exception:
         pass
 
     return har
@@ -222,7 +222,7 @@ def get_sockopts_from_socket(sock):
             else:
                 value = sock.getsockopt(getattr(socket, level),
                                         getattr(socket, name))
-        except:
+        except Exception:
             pass
         else:
             opt = OrderedDict()
