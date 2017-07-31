@@ -14,6 +14,12 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+    
+# requestsb (requests, but prioritize botocore)
+try:
+    from botocore.vendored import requests as requestsb
+except ImportError:
+    import requests as requestsb
 
 # requests
 try:
@@ -62,3 +68,13 @@ except ImportError:
         import urllib3 as urllib3r
     except ImportError:
         from botocore.vendored.requests.packages import urllib3 as urllib3r
+
+# urllib3rb (urllib3, but prioritize botocore)
+try:
+    from botocore.vendored.requests.packages import urllib3 as urllib3rb
+except ImportError:
+    try:
+        from requests.packages import urllib3 as urllib3rb
+    except ImportError:
+        import urllib3 as urllib3rb
+        

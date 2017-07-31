@@ -19,7 +19,9 @@ from .compat import DEFAULT_STREAM
 from . import objects, utils
 
 try:
-    from typing import Any, BinaryIO, Dict, List, NamedTuple, Optional, TextIO, Tuple
+    from typing import (
+        Any, BinaryIO, Dict, List,
+        NamedTuple, Optional, TextIO, Tuple)
 except ImportError:
     pass
 

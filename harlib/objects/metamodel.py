@@ -91,7 +91,7 @@ class HarObject(MetaObject):
         # type: (BinaryIO) -> None
         raise ValueError("%s could not be unserialized" % io.__class__)
 
-    
+
 def initialize_codecs():
     # type: () -> None
     if hasattr(HarObject, '_codecs'):

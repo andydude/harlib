@@ -11,7 +11,9 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-from requests.packages import urllib3 as urllib3r
+from harlib.compat import urllib3r
+from harlib.compat import urllib3rb
+from harlib.compat import requestsb
 from six.moves import http_client, urllib
 import requests
 import six
@@ -21,12 +23,14 @@ import urllib3
 HTTPBIN_ORIGIN = 'http://eu.httpbin.org'
 EXAMPLE_ORIGIN = 'http://nonexistant.example.com'
 
-class HarUtilsMixin(object):
+
+class HarHttplibUtilsMixin(object):
+    request_class = urllib.request.Request
+    response_class = http_client.HTTPResponse
 
     def assertEqualHttplibHTTPResponse(self, resp, resp2, msg=None):
-        ResponseCls = http_client.HTTPResponse
-        self.assertEqual(resp2.__class__, ResponseCls)
-        self.assertEqual(resp.__class__, ResponseCls)
+        self.assertEqual(resp2.__class__, self.response_class)
+        self.assertEqual(resp.__class__, self.response_class)
         self.assertEqual(resp.debuglevel, resp2.debuglevel)
         self.assertEqual(resp._method, resp2._method)
         self.assertEqual(resp.version, resp2.version)
@@ -40,8 +44,8 @@ class HarUtilsMixin(object):
         # self.assertEqual(to_resp.fp, resp.fp) -- impossible
 
     def assertEqualUrllib2Request(self, req, req2, msg=None):
-        self.assertEqual(req2.__class__, urllib.request.Request)
-        self.assertEqual(req.__class__, urllib.request.Request)
+        self.assertEqual(req2.__class__, self.request_class)
+        self.assertEqual(req.__class__, self.request_class)
         self.assertEqual(req.get_full_url(), req2.get_full_url())
         self.assertEqual(req.type, req2.type)
         self.assertEqual(req.host, req2.host)
@@ -50,11 +54,33 @@ class HarUtilsMixin(object):
         self.assertEqual(req.headers, req2.headers)
         self.assertEqual(req.unverifiable, req2.unverifiable)
         self.assertEqual(req.origin_req_host, req2.origin_req_host)
+    
+class HarRequestsUtilsMixin(object):
 
+    header_class_names = (
+        'CaseInsensitiveDict',  # old
+        'HTTPHeaderDict')       # new
+
+    raw_response_classes = (
+        urllib3.HTTPResponse,
+        urllib3r.HTTPResponse,
+        urllib3rb.HTTPResponse)
+    
+    response_classes = (
+        requests.Response,
+        requestsb.Response)
+    
+    request_classes = (
+        requests.Request,
+        requestsb.Request)
+    
+    prepared_request_classes = (
+        requests.PreparedRequest,
+        requestsb.PreparedRequest)
+    
     def assertEqualUrllib3HTTPResponse(self, resp, resp2, msg=None):
-        ResponseCls = (urllib3.HTTPResponse, urllib3r.HTTPResponse)
-        self.assertIn(resp2.__class__, ResponseCls)
-        self.assertIn(resp.__class__, ResponseCls)
+        self.assertIn(resp2.__class__, self.raw_response_classes)
+        self.assertIn(resp.__class__, self.raw_response_classes)
         self.assertEqual(resp.status, resp2.status)
         self.assertEqual(resp.reason, resp2.reason)
         self.assertEqual(resp.decode_content, resp2.decode_content)
@@ -72,8 +98,8 @@ class HarUtilsMixin(object):
         # self.assertEqual(resp._pool, resp2._pool)
 
     def assertEqualResponse(self, resp, resp2, msg=None):
-        self.assertEqual(resp2.__class__, requests.Response)
-        self.assertEqual(resp.__class__, requests.Response)
+        self.assertIn(resp2.__class__, self.response_classes)
+        self.assertIn(resp.__class__, self.response_classes)
         self.assertEqual(resp._content, resp2._content)
         self.assertEqual(resp._content_consumed, resp2._content_consumed)
         self.assertEqual(resp.status_code, resp2.status_code)
@@ -88,8 +114,8 @@ class HarUtilsMixin(object):
         self.assertEqualUrllib3HTTPResponse(resp.raw, resp2.raw)
 
     def assertEqualRequest(self, req, req2, msg=None):
-        self.assertEqual(req2.__class__, requests.Request)
-        self.assertEqual(req.__class__, requests.Request)
+        self.assertIn(req2.__class__, self.request_classes)
+        self.assertIn(req.__class__, self.request_classes)
         self.assertEqual(req.method, req2.method, msg=None)
         self.assertEqual(req.url, req2.url, msg=None)
         self.assertEqual(req.headers, req2.headers, msg=None)
@@ -101,10 +127,8 @@ class HarUtilsMixin(object):
         self.assertEqual(req.hooks, req2.hooks, msg=None)
 
     def assertEqualPreparedRequest(self, req, req2, msg=None):
-        self.assertEqual(req2.__class__, requests.PreparedRequest,
-                         "types %s %s" % (type(req), type(req2)))
-        self.assertEqual(req.__class__, requests.PreparedRequest,
-                         "types %s %s" % (type(req), type(req2)))
+        self.assertIn(req2.__class__, self.prepared_request_classes)
+        self.assertIn(req.__class__, self.prepared_request_classes)
         self.assertEqual(req.method, req2.method, msg=None)
         self.assertEqual(req.url, req2.url, msg=None)
         self.assertEqual(req.headers, req2.headers, msg=None)
@@ -113,7 +137,10 @@ class HarUtilsMixin(object):
         self.assertEqual(req.hooks, req2.hooks, msg=None)
 
     def assertEqualCookies(self, cookies, cookies2, msg=None):
-        self.assertEqual(cookies.__class__, cookies2.__class__, msg)
+        self.assertTrue(cookies.__class__.__name__.endswith(
+            'CookieJar'), msg or type(cookies))
+        self.assertTrue(cookies2.__class__.__name__.endswith(
+            'CookieJar'), msg or type(cookies2))
         self.assertEqual(len(cookies), len(cookies2), msg)
         # if len(headers) != len(headers2): return
         # keys = utils.dict_sortedkeys(headers)
@@ -121,7 +148,14 @@ class HarUtilsMixin(object):
         # for i in six.moves.range(len(headers)):
 
     def assertEqualHeaders(self, headers, headers2, msg=None):
-        self.assertEqual(headers.__class__, headers2.__class__, msg)
+        self.assertTrue(headers.__class__.__name__.split('.')[-1] in (
+            self.header_class_names), msg or type(headers).__name__)
+        self.assertTrue(headers2.__class__.__name__.split('.')[-1] in (
+            self.header_class_names), msg or type(headers2).__name__)
+        # self.assertEqual(headers.__class__,
+        #                  headers2.__class__,
+        #                  (headers.__class__,
+        #                   headers2.__class__))
         self.assertEqual(len(headers), len(headers2), msg)
         keys = sorted(headers.keys())
         keys2 = sorted(headers2.keys())
@@ -142,5 +176,11 @@ class HarUtilsMixin(object):
         self.within_history = False
 
 
-class TestUtils(unittest.TestCase, HarUtilsMixin):
+class HarUtilsMixin(HarRequestsUtilsMixin,
+                    HarHttplibUtilsMixin):
+    pass
+
+
+class TestUtils(unittest.TestCase,
+                HarUtilsMixin):
     pass

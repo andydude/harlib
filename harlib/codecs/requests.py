@@ -221,7 +221,11 @@ class RequestsCodec(object):
 
     def encode_HarResponse_to_Response(self, har):
         ResponseCls = requests.Response
-        HeadersCls = requests.structures.CaseInsensitiveDict
+        if six.PY3:
+            from ..compat import requestsb
+            HeadersCls = requestsb.structures.CaseInsensitiveDict
+        else:
+            HeadersCls = requests.structures.CaseInsensitiveDict
         CookiesCls = requests.cookies.RequestsCookieJar
         headers = list(map(lambda x: x.to_requests(), har.headers))
         cookies = list(map(lambda x: x.to_requests(), har.cookies))

@@ -11,3 +11,12 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
+from harlib.test_utils import TestUtils
+
+
+class DjangoTests(TestUtils):
+
+    def test_django(self):
+        from harlib import viewer
+        import harlib_viewer
+        self.assertEqual(viewer, harlib_viewer)

@@ -81,7 +81,7 @@ class HarRequest(HarMessage):
     #     ('_types', Dict[str, Any]),
     #     ('_ordered', List[str]),
     # ])
-    
+
     _required = [
         'method',
         'url',
