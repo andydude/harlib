@@ -17,6 +17,7 @@ import json
 import six
 from collections import Mapping
 from .compat import OrderedDict
+from six.moves import map
 
 
 def render_http_version(num):
@@ -58,7 +59,7 @@ def decode_json(o, **kwargs):
     d = o
     if not isinstance(d, dict):
         d = json.loads(d)
-    har = map(dict_from_pair, d.items())
+    har = list(map(dict_from_pair, list(d.items())))
     return har
 
 
@@ -96,18 +97,18 @@ def decode_query(o):
         if query is None:
             return []
         pairs = query.split('&')
-        pairs = filter(lambda it: it != '', pairs)
-        har = map(parse_pair, pairs)
+        pairs = [it for it in pairs if it != '']
+        har = list(map(parse_pair, pairs))
     return har
 
 
 def encode_query(d):
     har = ''
     if isinstance(d, dict):
-        d = d.items()
+        d = list(d.items())
     if isinstance(d, list):
         if isinstance(d[0], Mapping):
-            d = map(lambda p: (p['name'], p['value']), d)
+            d = [(p['name'], p['value']) for p in d]
         for name, value in d:
             har += '&' + str(name) + '=' + str(value)
     if har != '':

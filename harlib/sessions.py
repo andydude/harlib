@@ -17,6 +17,7 @@ from .compat import OrderedDict
 from .compat import requests
 from .compat import DEFAULT_STREAM
 from . import objects, utils
+from six.moves import map
 
 try:
     from typing import (
@@ -282,8 +283,8 @@ class HarSessionMixin(object):
                 if not self.keep_content:
                     self._delete_content(entry)
                 if self.keep_socket_options and len(self._kept_sockopts) > 0:
-                    entry._socketOptions = map(
-                        objects.HarSocketOption, self._kept_sockopts)
+                    entry._socketOptions = list(map(
+                        objects.HarSocketOption, self._kept_sockopts))
                 if True:  # TODO: make a flag for keeping client options
                     clientOptions = RequestsCodec().\
                         decode_HarClientOptions_from_Session(self)

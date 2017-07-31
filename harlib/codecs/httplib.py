@@ -152,7 +152,7 @@ class HttplibCodec(object):
         if six.PY3:
             headers = raw._headers
         else:
-            headers = map(lambda x: x.strip().split(': ', 1), raw.headers)
+            headers = [x.strip().split(': ', 1) for x in raw.headers]
         return headers
 
     def decode_HarResponseBody_from_HTTPResponse(self, raw):
@@ -314,4 +314,4 @@ class Urllib2Codec(object):
         return har
 
     def decode_HarHeaders_from_Request(self, raw):
-        return raw.headers.items()
+        return list(raw.headers.items())

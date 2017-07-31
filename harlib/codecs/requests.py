@@ -9,6 +9,7 @@
 # modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
 import harlib
 import json
 import six
@@ -17,6 +18,7 @@ from harlib.codecs.httplib import HttplibCodec
 from ..compat import OrderedDict
 from ..compat import requests
 from ..compat import urllib3r
+from six.moves import map
 
 KEEP_SIZE = False
 DEFAULT_VERSION = 'HTTP/0'
@@ -71,7 +73,7 @@ class Urllib3Codec(object):
         return resp
 
     def encode_HarResponse_to_HTTPResponse(self, har):
-        headers = dict(map(harlib.utils.pair_from_obj, har.headers))
+        headers = dict(list(map(harlib.utils.pair_from_obj, har.headers)))
 
         resp = self.response_class(
             body=None,
@@ -124,8 +126,7 @@ class Urllib3Codec(object):
 
         if KEEP_SIZE:
             try:
-                headers = '\r\n'.join(map(lambda x: '%s: %s' % x,
-                                          har['headers']))
+                headers = '\r\n'.join(['%s: %s' % x for x in har['headers']])
                 har['headersSize'] = len(headers + '\r\n\r\n')
                 har['bodySize'] = len(har['content']['text'])
             except Exception:
@@ -227,8 +228,8 @@ class RequestsCodec(object):
         else:
             HeadersCls = requests.structures.CaseInsensitiveDict
         CookiesCls = requests.cookies.RequestsCookieJar
-        headers = list(map(lambda x: x.to_requests(), har.headers))
-        cookies = list(map(lambda x: x.to_requests(), har.cookies))
+        headers = list([x.to_requests() for x in har.headers])
+        cookies = list([x.to_requests() for x in har.cookies])
 
         content = har.content.text
         if isinstance(content, six.text_type):
@@ -254,17 +255,17 @@ class RequestsCodec(object):
         RequestCls = requests.models.Request
         HeadersCls = dict
         CookiesCls = dict
-        headers = list(map(lambda x: x.to_requests(), har.headers))
-        cookies = list(map(lambda x: x.to_requests(), har.cookies))
+        headers = list([x.to_requests() for x in har.headers])
+        cookies = list([x.to_requests() for x in har.cookies])
 
         req = RequestCls(method=har.method, url=har.url)
         req.headers = HeadersCls(headers)
         req.cookies = CookiesCls(cookies) if har.cookies else None
-        req.params = dict(map(harlib.utils.pair_from_obj, har.queryString))
+        req.params = dict(list(map(harlib.utils.pair_from_obj, har.queryString)))
 
         if har.postData:
-            req.data = dict(map(harlib.utils.pair_from_obj,
-                                har.postData.params))
+            req.data = dict(list(map(harlib.utils.pair_from_obj,
+                                har.postData.params)))
 
         # req.hooks -- impossible
         # req.auth -- impossible
@@ -275,8 +276,8 @@ class RequestsCodec(object):
         RequestCls = requests.models.PreparedRequest
         HeadersCls = dict
         CookiesCls = requests.cookies.RequestsCookieJar
-        headers = list(map(lambda x: x.to_requests(), har.headers)) or []
-        cookies = list(map(lambda x: x.to_requests(), har.cookies)) or []
+        headers = list([x.to_requests() for x in har.headers]) or []
+        cookies = list([x.to_requests() for x in har.cookies]) or []
 
         preq = RequestCls()
         preq.method = har.method
@@ -356,11 +357,11 @@ class RequestsCodec(object):
         har = self.dict_class()
         proxies = self.dict_class()
         try:
-            proxies['http'] = raw.adapters['http://'].proxy_manager.keys()[0]
+            proxies['http'] = list(raw.adapters['http://'].proxy_manager.keys())[0]
         except Exception:
             pass
         try:
-            proxies['https'] = raw.adapters['https://'].proxy_manager.keys()[0]
+            proxies['https'] = list(raw.adapters['https://'].proxy_manager.keys())[0]
         except Exception:
             pass
         har['proxies'] = proxies
@@ -486,7 +487,7 @@ class RequestsCodec(object):
             har['text'] = ''
         har['_size'] = len(har['text'])
 
-        har['params'] = body_params.items()
+        har['params'] = list(body_params.items())
 
         if raw.headers:
             if raw.headers.get('Content-Type'):
@@ -531,7 +532,7 @@ class RequestsCodec(object):
         return getattr(self, prefix + raw.__class__.__name__)(raw)
 
     def decode_HarQueryStringParams_from_Request(self, raw):
-        return list(map(harlib.utils.dict_from_pair, raw.params.items()))
+        return list(map(harlib.utils.dict_from_pair, list(raw.params.items())))
 
     def decode_HarQueryStringParams_from_PreparedRequest(self, raw):
         try:
@@ -628,7 +629,7 @@ class RequestsCodec(object):
                 self.serialize_HarHeader_from_tuple(
                     io, (header[0].title(), header[1]))
             except Exception as err:
-                print(repr(err))
+                print((repr(err)))
             if last:
                 io.write(b'\n')
             else:

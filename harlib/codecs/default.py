@@ -9,6 +9,7 @@
 # modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from harlib.objects.messages import HarHeader
+from six.moves import map
 
 
 class DefaultCodec(object):
@@ -62,7 +63,7 @@ class DefaultCodec(object):
             har['fileName'] = obj[0]
             har['contentType'] = obj[2]
             if hasattr(obj[3], 'items'):
-                har['_headers'] = list(map(HarHeader, obj[3].items()))
+                har['_headers'] = list(map(HarHeader, list(obj[3].items())))
         else:
             pass
 

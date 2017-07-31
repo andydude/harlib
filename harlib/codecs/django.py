@@ -93,7 +93,7 @@ class DjangoCodec(object):
         return har
 
     def decode_HarCookies_from_HttpRequest(self, raw):
-        return raw.COOKIES.items()
+        return list(raw.COOKIES.items())
 
     def decode_HarHeaders_from_HttpRequest(self, raw):
         headers = []
@@ -107,7 +107,7 @@ class DjangoCodec(object):
         return []
 
     def decode_HarHeaders_from_HttpResponse(self, raw):
-        headers = map(lambda i: (i[1][0], i[1][1]), raw._headers.items())
+        headers = [(i[1][0], i[1][1]) for i in list(raw._headers.items())]
         return headers
 
     def decode_HarRequestBody_from_HttpRequest(self, raw):

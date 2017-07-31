@@ -8,6 +8,7 @@
 # will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
 # modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
+from __future__ import print_function
 from collections import Mapping
 from .metamodel import HarObject
 
@@ -69,7 +70,7 @@ class HarCookie(HarNameValuePair):
         elif isinstance(obj, dict):
             har = obj  # from .har.json
         else:
-            print("invalid cookie %s" % repr(obj))
+            print(("invalid cookie %s" % repr(obj)))
 
         super(HarCookie, self).__init__(har)
 
@@ -93,7 +94,7 @@ class HarHeader(HarNameValuePair):
         elif isinstance(obj, dict):
             har = obj  # from .har.json
         else:
-            print("invalid header %s" % repr(obj))
+            print(("invalid header %s" % repr(obj)))
 
         if self.use_titlecase:
             har['name'] = har['name'].title()
