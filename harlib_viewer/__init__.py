@@ -11,3 +11,5 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
+
+default_app_config = 'harlib_viewer.apps.HarlibViewerConfig'

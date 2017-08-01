@@ -13,10 +13,10 @@ harlib - HTTP Archive (HAR) format library
 from __future__ import absolute_import
 from django.conf.urls import include, url
 from django.contrib import admin
-import harlib.viewer.urls
+import harlib_viewer.urls
 admin.autodiscover()
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^viewer/', include(harlib.viewer.urls)),
+    url(r'^viewer/', include(harlib_viewer.urls)),
 ]

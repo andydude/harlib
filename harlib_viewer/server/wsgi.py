@@ -14,7 +14,7 @@ from os import environ
 harlib - HTTP Archive (HAR) format library
 '''
 '''
-WSGI config for harlib.viewer.server project.
+WSGI config for harlib_viewer.server project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -23,5 +23,5 @@ https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/
 '''
 
 environ.setdefault('DJANGO_SETTINGS_MODULE',
-                   'harlib.viewer.server.settings')
+                   'harlib_viewer.server.settings')
 application = get_wsgi_application()

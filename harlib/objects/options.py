@@ -79,6 +79,3 @@ class HarSocketOption(HarObject):
     _optional = {
         'comment': '',
     }
-
-    def __init__(self, obj=None):
-        super(HarSocketOption, self).__init__(obj)

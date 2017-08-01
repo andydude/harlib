@@ -36,8 +36,14 @@ class HarCache(HarObject):
         'comment': '',
     }
 
-    def __init__(self, obj=None):
-        super(HarCache, self).__init__(obj)
+    
+class HarPageTimings(HarObject):
+
+    _optional = {
+        'onContentLoad': '',
+        'onLoad': '',
+        'comment': '',
+    }
 
 
 class HarPage(HarObject):
@@ -53,20 +59,10 @@ class HarPage(HarObject):
         'comment': '',
     }
 
-    def __init__(self, obj=None):
-        super(HarPage, self).__init__(obj)
-
-
-class HarPageTimings(HarObject):
-
-    _optional = {
-        'onContentLoad',
-        'onLoad',
-        'comment',
+    _types = {
+        'pageTimings': HarPageTimings,
     }
 
-    def __init__(self, obj=None):
-        super(HarPageTimings, self).__init__(obj)
 
 
 class HarTimings(HarObject):

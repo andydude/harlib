@@ -114,7 +114,3 @@ class HarResponse(HarMessage):
             har = self.decode(obj)
 
         super(HarResponse, self).__init__(har)
-
-    @property
-    def size(self):
-        return self.headersSize + self.bodySize

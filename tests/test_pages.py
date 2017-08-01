@@ -11,11 +11,17 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-import os
-import sys
+from harlib.test_utils import TestUtils, HTTPBIN_ORIGIN
+from harlib.objects import HarPage, HarPageTimings
 
-if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                          "harlib_viewer.server.settings")
-    from django.core.management import execute_from_command_line
-    execute_from_command_line(sys.argv)
+
+class PageTests(TestUtils):
+
+    def test_1_page(self):
+        page_timings = HarPageTimings({})
+        page = HarPage({
+            'startedDateTime': '2017-07-31T21:04:08.993170Z',
+            'id': 'default',
+            'title': '',
+            'pageTimings': None,
+        })

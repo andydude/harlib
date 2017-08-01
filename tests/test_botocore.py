@@ -15,13 +15,12 @@ import json
 import unittest
 import harlib
 from harlib.test_utils import TestUtils, EXAMPLE_ORIGIN, HTTPBIN_ORIGIN
-from harlib.objects import HarEntry
-from harlib.compat import requests
-from harlib.compat import Request
-from harlib.compat import RequestException
+from botocore.vendored import requests
+from botocore.vendored.requests.models import Request
+from botocore.vendored.requests.exceptions import RequestException
 
 
-class TestRequestsResponse(TestUtils):
+class TestBotocore(TestUtils):
 
     def setUp(self):
         self.resp = requests.post(
@@ -78,36 +77,7 @@ class TestRequestsResponse(TestUtils):
 
         to_resp = har_log.encode(requests.Response)
         self.assertEqualResponse(to_resp, resp)
-        
-    def test_5_from_requests_entry(self):
-        entry = HarEntry(self.resp)
-        
-        d = entry.to_json()
-        self.assertIn('request', d)
-        self.assertIn('response', d)
-        self.assertIn('text', d['request']['postData'])
-        self.assertIn('text', d['response']['content'])
-        
-        d = entry.to_json(with_content=False)
-        self.assertNotIn('text', d['request']['postData'])
-        self.assertNotIn('text', d['response']['content'])
 
-    def test_5_to_requests_entry(self):
-        entry = HarEntry(self.resp)
-        entry2 = HarEntry(entry)
-        self.assertEqual(entry, entry2)
-                
-        HarEntry({
-            'time': 0,
-            'request': None,
-            'response': None})
-                
-        with self.assertRaises(ValueError):
-            HarEntry([])
 
-        with self.assertRaises(ValueError):
-            HarEntry('')
-
-            
 if __name__ == '__main__':
     unittest.main(verbosity=2)

@@ -36,18 +36,11 @@ class DjangoCodec(object):
     # Encoding
 
     def encode(self, har, raw_class):
-        assert raw_class.__module__ in self.modules
-        method_name = 'encode_%s_to_%s' % (
-            har.__class__.__name__, raw_class.__name__)
-        return getattr(self, method_name)(har)
-
-    def encode_HarRequest_to_HttpRequest(self, har):
-        req = self.request_class()
-        return req
-
-    def encode_HarResponse_to_HttpResponse(self, har):
-        resp = self.response_class()
-        return resp
+        # assert raw_class.__module__ in self.modules
+        # method_name = 'encode_%s_to_%s' % (
+        #     har.__class__.__name__, raw_class.__name__)
+        # return getattr(self, method_name)(har)
+        raise NotImplementedError
 
     # Decoding
 

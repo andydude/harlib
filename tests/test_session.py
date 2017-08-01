@@ -11,11 +11,16 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-import os
-import sys
+from harlib.test_utils import TestUtils, HTTPBIN_ORIGIN
+from harlib.sessions import HarSession
 
-if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                          "harlib_viewer.server.settings")
-    from django.core.management import execute_from_command_line
-    execute_from_command_line(sys.argv)
+
+class SessionTests(TestUtils):
+
+    def setUp(self):
+        self.session = HarSession('temp.har')
+        
+    def test_1_session(self):
+        url = '%s/get' % HTTPBIN_ORIGIN
+        response = self.session.get(url)
+        self.assertTrue(len(self.session._entries) == 1)

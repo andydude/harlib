@@ -53,7 +53,6 @@ else:
     # only import if django is installed
     try:
         import django
-        import harlib_viewer as viewer
         from harlib_viewer import middleware
     except ImportError as err:
         logger.error(repr(err), exc_info=True)

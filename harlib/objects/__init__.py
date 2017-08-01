@@ -15,6 +15,9 @@ from .messages import (
     HarPostDataParam,
     HarQueryStringParam)
 from .entry import (
+    HarPage,
+    HarPageTimings,
+    HarTimeouts,
     HarTimings,
     HarEntry,
     HarLog,
