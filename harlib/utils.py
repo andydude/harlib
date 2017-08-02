@@ -78,13 +78,13 @@ def decode_multipart(o, content_type, **kwargs):
             for part in multipart.MultipartParser(stream, boundary, len(o),
                                                   **kwargs):
                 if part.filename or not part.is_buffered():
-                    param = {'name': part.name, 'value': str(part.value),
-                             'filename': str(part.filename)}
+                    param = {'name': part.name, 'value': part.value,
+                             'filename': part.filename}
                 else:  # TODO: Big form-fields are in the files dict. really?
-                    param = {'name': part.name, 'value': str(part.value)}
+                    param = {'name': part.name, 'value': part.value}
                 har.append(param)
-    except Exception:
-        pass
+    except Exception as err:
+        print(repr(err))
 
     return har
 
