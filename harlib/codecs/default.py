@@ -2,25 +2,26 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
+#
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
-import collections
-import harlib
+from harlib.objects.messages import HarHeader
+from six.moves import map
+
 
 class DefaultCodec(object):
 
     dict_class = dict
-    modules = ['__builtin__']
+    modules = ['__builtin__',  # PY2
+               'builtins']     # PY3
 
     def __init__(self):
         pass
 
-    ##########################################################################################
-    ## Encoding
+    # Encoding
 
     def encode(self, har, raw_class):
         assert raw_class.__module__ in self.modules
@@ -34,8 +35,7 @@ class DefaultCodec(object):
     def encode_HarCookie_to_tuple(self, har):
         return (har.name, har.value)
 
-    ##########################################################################################
-    ## Decoding
+    # Decoding
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
@@ -63,7 +63,7 @@ class DefaultCodec(object):
             har['fileName'] = obj[0]
             har['contentType'] = obj[2]
             if hasattr(obj[3], 'items'):
-                har['_headers'] = map(HarHeader, obj[3].items())
+                har['_headers'] = list(map(HarHeader, list(obj[3].items())))
         else:
             pass
 

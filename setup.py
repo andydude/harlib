@@ -11,18 +11,8 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-from setuptools import setup, find_packages
-import json
-import harlib
+from setuptools import setup
 
-if __name__ == '__main__':
-    setup_config = json.load(open("package.json"))
-    setup(
-        long_description = open('README.md').read(),
-        install_requires = open("requires.txt").readlines(),
-        packages = find_packages(),
-        download_url = harlib.__download_url__,
-        url = harlib.__homepage_url__,
-        version = harlib.__version__,
-        **setup_config
-    )
+setup(
+    setup_requires=['pbr>=1.9', 'setuptools>=17.1'],
+    pbr=True)

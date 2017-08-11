@@ -1,5 +1,0 @@
-metaobject
-multipart>=0.1
-requests
-six>=1.8.0
-

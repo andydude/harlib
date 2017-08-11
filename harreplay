@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+import os
+import sys
+import json
+import harlib
+import requests
+import unittest
+from unittest import TestCase
+from harlib.test_utils import HarUtilsMixin
+
+class MainTests(TestCase, HarUtilsMixin):
+
+    def test_execute_har_log(self):
+        filename = os.environ.get('HAR_FILE')
+        
+        with open(filename) as reader:
+            har_data = json.load(reader)
+            
+        har_file = harlib.HarFile(har_data)
+
+        session = harlib.sessions.HarSession(filename='/dev/stdout')
+        for entry in har_file.log.entries:
+            request = entry.request.encode(requests.Request)
+            expected_response = entry.encode(requests.Response)
+            actual_response = session.request(**vars(request))
+            self.assertEqualResponse(expected_response, actual_response)
+    
+def main():
+    unittest.main(verbosity=2)
+    
+if __name__ == '__main__':
+    main()
