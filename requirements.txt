@@ -1,5 +1,6 @@
-metaobject
+-e git+git@github.com:1T/metaobject.git@master#egg=metaobject
 multipart>=0.1
 requests
 six>=1.8.0
-
+botocore
+typing

@@ -7,26 +7,15 @@
 # This library ("it") is free software; it is distributed in the hope that it
 # will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
 # modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
+'''
+harlib - HTTP Archive (HAR) format library
+'''
 from __future__ import absolute_import
-from .metamodel import HarObject
-from .messages import (
-    HarCookie,
-    HarHeader,
-    HarPostDataParam,
-    HarQueryStringParam)
-from .entry import (
-    HarPage,
-    HarPageTimings,
-    HarTimeouts,
-    HarTimings,
-    HarEntry,
-    HarLog,
-    HarFile)
-from .request import (
-    HarRequestBody,
-    HarRequest)
-from .response import (
-    HarResponseBody,
-    HarResponse)
+from django.shortcuts import render_to_response
 
-# flake8: noqa
+
+def index(request):
+    return render_to_response(
+        'harlib_viewer/index.html',
+        {'remote_location':
+         request.GET.get('remote_location', '')})

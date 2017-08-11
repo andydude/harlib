@@ -2,50 +2,41 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 import logging
 import os
-import requests
 import hashlib
 import six
-from harlib.codecs.requests import RequestsCodec
+from .codecs.requests import RequestsCodec
+from .compat import OrderedDict
+from .compat import requests
+from .compat import DEFAULT_STREAM
 from . import objects, utils
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from six.moves import map
 
 try:
-    from requests.adapters import DEFAULT_STREAM
+    from typing import (
+        Any, BinaryIO, Dict, List,
+        NamedTuple, Optional, TextIO, Tuple)
 except ImportError:
-    DEFAULT_STREAM = False
+    pass
 
 logger = logging.getLogger(__name__)
-
-
-class HarSocketManager(object):
-
-    def __init__(self, session):
-        pass
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self):
-        pass
 
 
 class HarSessionMixin(object):
 
     def __init__(self, filename=None):
+        # type: (str) -> None
         object.__init__(self)
         self._entries = []
         self._filename = str(filename) if filename else ''
+        self._cache_filename = ''
         self._kept_sockopts = []
         self.keep_entries = True
         self.keep_content = True
@@ -54,6 +45,7 @@ class HarSessionMixin(object):
         self.keep_socket_options = False
 
     def from_har(self, obj):
+        # type: (Dict) -> HarSessionMixin
         if isinstance(obj, objects.HarFile):
             self._entries.extend(obj.log.entries)
         elif isinstance(obj, objects.HarLog):
@@ -63,67 +55,109 @@ class HarSessionMixin(object):
         return self
 
     def clear(self):
+        # type: () -> None
         self._entries = []
 
-    def dump(self, with_content=False, logging_level=None, extra=None, cache=True, with_io=False, **kwargs):
+    def _dump_metadata(
+            self, with_content=False,
+            logging_level=None,
+            extra=None, cache=True,
+            with_io=False, **kwargs):
+        # type: (bool, Optional[int], Any, bool, bool, **Any) -> None
+        if extra is not None:
+            if isinstance(extra, dict):
+                extra_data = extra
+            else:
+                extra_data = extra.to_json()
+            for entry in self._entries:
+                entry._metadata = extra_data
+
+    def _dump_check_dir(
+            self, with_content=False,
+            logging_level=None,
+            extra=None, cache=True,
+            with_io=False, **kwargs):
+        # type: (bool, Optional[int], Any, bool, bool, **Any) -> None
+        dirname = os.path.dirname(self._filename)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+    def _dump_check_cache(
+            self, with_content=False,
+            logging_level=None,
+            extra=None, cache=True,
+            with_io=False, **kwargs):
+        # type: (bool, Optional[int], Any, bool, bool, **Any) -> None
+        if cache:
+            content_hash = self.get_content_hash()
+            cache_dir = os.path.join(
+                os.path.dirname(self._filename), '.harlib')
+            self._cache_filename = os.path.join(cache_dir, content_hash)
+            logger.debug('har cache file: %s' % self._cache_filename)
+            if not os.path.exists(cache_dir):
+                os.makedirs(cache_dir)
+            if not os.path.exists(self._cache_filename):
+                with open(self._cache_filename, 'w') as hf:
+                    hf.write(self._filename)
+            else:
+                with open(self._cache_filename, 'r') as ch:
+                    previous_filename = ch.read()
+                if os.path.exists(previous_filename):
+                    logger.debug('found match cache file')
+                    logger.info('%d cached responses in %s' %
+                                (len(self._entries), previous_filename,),
+                                extra=extra)
+                    return previous_filename
+
+    def _dump_write_file(
+            self, with_content=False,
+            logging_level=None,
+            extra=None, cache=True,
+            with_io=False, **kwargs):
+        # type: (bool, Optional[int], Any, bool, bool, **Any) -> None
+        har = self.to_har(with_content=with_content)
+        har_dump = har.dumps(**kwargs)
+        with open(self._filename, 'w') as f:
+            f.write(har_dump)
+        if cache:
+            with open(self._cache_filename, 'w') as writer:
+                writer.write(self._filename)
+
+    def _dump_summarize(
+            self, with_content=False,
+            logging_level=None,
+            extra=None, cache=True,
+            with_io=False, **kwargs):
+        # type: (bool, Optional[int], Any, bool, bool, **Any) -> None
         if logging_level is None:
             logging_level = logging.DEBUG
-        nentries = len(self._entries)
+        VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV')
+        filename = self._filename
+        if VIRTUAL_ENV and filename and filename.startswith(VIRTUAL_ENV):
+            filename = '${VIRTUAL_ENV}' + filename[len(VIRTUAL_ENV):]
+        logger.log(logging_level, 'Dumped %d responses to %s' %
+                   (len(self._entries), filename), extra=extra)
+
+    def dump(self, with_content=False,
+             logging_level=None, **kwargs):
+        # type: (bool, Optional[int], **Any) -> None
+        if logging_level is None:
+            logging_level = logging.DEBUG
         if self._filename and self._entries:
-            # add metadata
-            if extra is not None:
-                if isinstance(extra, dict):
-                    extra_data = extra
-                else:
-                    extra_data = extra.to_json()
-                for entry in self._entries:
-                    entry._metadata = extra_data
-
-            # make directory
             try:
-                dirname = os.path.dirname(self._filename)
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
-
-                har = self.to_har(with_content=with_content)
-                har_dump = har.dumps(**kwargs)
-
-                if cache:
-                    content_hash = self.get_content_hash()
-                    cache_dir = os.path.join(dirname, '.harlib')
-                    cache_hash_file = os.path.join(cache_dir, content_hash)
-                    logger.debug('har cache file: %s' % cache_hash_file)
-                    if not os.path.exists(cache_dir):
-                        os.makedirs(cache_dir)
-                    if not os.path.exists(cache_hash_file):
-                        with open(cache_hash_file, 'w') as hf:
-                            hf.write(self._filename)
-                    else:
-                        with open(cache_hash_file, 'r') as ch:
-                            previous_filename = ch.read()
-                        if os.path.exists(previous_filename):
-                            logger.debug('found match cache file')
-                            logger.info('%d cached responses in %s' % (nentries, previous_filename,), extra=extra)
-                            return previous_filename
-                # write file
-                with open(self._filename, 'w') as f:
-                    f.write(har_dump)
-                if cache:
-                    with open(cache_hash_file, 'w') as cf:
-                        cf.write(self._filename)
-
+                # Refactored this because of its original complexity.
+                # C901 'HarSessionMixin.dump' is too complex (16)
+                self._dump_metadata(with_content, logging_level, **kwargs)
+                self._dump_check_dir(with_content, logging_level, **kwargs)
+                self._dump_check_cache(with_content, logging_level, **kwargs)
+                self._dump_write_file(with_content, logging_level, **kwargs)
+                self._dump_summarize(with_content, logging_level, **kwargs)
             except (IOError, OSError) as err:
                 pass
                 logger.warning('%s %s' % (type(err), repr(err)))
             except Exception as err:
                 pass
                 logger.error('%s %s' % (type(err), repr(err)), exc_info=True)
-
-        VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV')
-        filename = self._filename
-        if VIRTUAL_ENV and filename and filename.startswith(VIRTUAL_ENV):
-            filename = '${VIRTUAL_ENV}' + filename[len(VIRTUAL_ENV):]
-        logger.log(logging_level, 'Dumped %d responses to %s' % (nentries, filename), extra=extra)
         return str(self._filename)
 
     def dumps(self, with_content=False, **kwargs):
@@ -132,6 +166,7 @@ class HarSessionMixin(object):
         return s
 
     def to_json(self, with_content=False, dict_class=OrderedDict, indent=None):
+        # type: (bool, type, Optional[int]) -> Dict
         '''
         Converts the HAR entries into a dictionary
         '''
@@ -139,6 +174,7 @@ class HarSessionMixin(object):
         return har.to_json(dict_class=dict_class)
 
     def to_har(self, with_content=False):
+        # type: (bool) -> objects.HarFile
         '''
         Converts the HAR entries into a model object
         '''
@@ -155,51 +191,56 @@ class HarSessionMixin(object):
         return har
 
     def _delete_content(self, entry):
+        # type: (HarEntry) -> None
         try:
             del entry.request.postData.text
             del entry.request.postData.encoding
-        except:
+        except Exception:
             pass
 
         try:
             del entry.response.content.text
             del entry.response.content.encoding
-        except:
+        except Exception:
+            pass
+
+    def get_content_hash_from_request(self, request, writer):
+        # type: (HarRequest, TextIO) -> None
+        writer.write(request.method)
+        writer.write(request.url)
+        try:
+            writer.write(six.text_type(request.postData.text))
+        except Exception:
+            pass
+        try:
+            writer.write(six.text_type(request.headers))
+        except Exception:
+            pass
+
+    def get_content_hash_from_response(self, response, writer):
+        # type: (HarResponse, TextIO) -> None
+        writer.write(six.text_type(response.status))
+        try:
+            writer.write(six.text_type(response.content.encoding))
+        except AttributeError:
+            pass
+        try:
+            if isinstance(response.content.text, six.text_type):
+                writer.write(response.content.text)
+            else:
+                writer.write(response.content.text.decode(
+                    'latin1', 'ignore'))
+        except Exception:
             pass
 
     def get_content_hash(self):
+        # type: () -> str
         content = ''
-        content_without_reponse_text = ''
+        writer = six.StringIO()
         for entry in self._entries:
-            content_without_reponse_text += entry.request.method
-            content_without_reponse_text += entry.request.url
-            try:
-                content_without_reponse_text += str(entry.request.postData.text)
-            except Exception as err:
-                pass
-            try:
-                content_without_reponse_text += str(entry.request.headers)
-            except Exception as err:
-                pass
-            content_without_reponse_text += str(entry.response.status)
-            try:
-                content_without_reponse_text += str(entry.response.content.encoding)
-            except AttributeError as err:
-                pass
-            content = content_without_reponse_text
-            try:
-                if isinstance(entry.response.content.text, six.text_type):
-                    content += entry.response.content.text.encode('latin1', 'ignore')
-                else:
-                    content += entry.response.content.text
-            except AttributeError as err:
-                pass
-            except UnicodeEncodeError as err:
-                pass
-                logger.warning('UnicodeEncodeError computing text for hash: %s' % err)
-            except Exception as err:
-                pass
-                logger.warning('Exception computing text for hash: %s %s' % (type(err), err,))
+            self.get_content_hash_from_request(entry.request, writer)
+            self.get_content_hash_from_response(entry.response, writer)
+        content = writer.getvalue().encode('latin1', 'ignore')
         sha_hash = hashlib.new('sha1')
         try:
             if isinstance(content, six.text_type):
@@ -208,14 +249,14 @@ class HarSessionMixin(object):
                 sha_hash.update(content)
         except UnicodeEncodeError as ex:
             logger.warning('UnicodeEncodeError generating hash: %s' % ex)
-            sha_hash.update(content_without_reponse_text)
         sha_hash_digest = sha_hash.hexdigest()
-        del content_without_reponse_text
+        del writer
         del content
         return sha_hash_digest
 
     if utils.HAS_XML:
         def to_xml(self, *args, **kwargs):
+            # type: (*Any, **Any) -> str
             '''
             Converts the HAR entries into an XML string
             '''
@@ -226,6 +267,7 @@ class HarSessionMixin(object):
 
     if utils.HAS_YAML:
         def to_yaml(self, *args, **kwargs):
+            # type: (*Any, **Any) -> str
             '''
             Converts the HAR entries into a YAML string
             '''
@@ -234,25 +276,30 @@ class HarSessionMixin(object):
             return s
 
     def _keep_entries(self, resp):
+        # type: (requests.Response) -> None
         if self._filename is not None:
             new_entries = objects.HarLog(resp).entries
             for entry in new_entries:
                 if not self.keep_content:
                     self._delete_content(entry)
                 if self.keep_socket_options and len(self._kept_sockopts) > 0:
-                    entry._socketOptions = map(objects.HarSocketOption, self._kept_sockopts)
-                if True: # TODO: make a flag for keeping client options
-                    clientOptions = RequestsCodec().decode_HarClientOptions_from_Session(self)
+                    entry._socketOptions = list(map(
+                        objects.HarSocketOption, self._kept_sockopts))
+                if True:  # TODO: make a flag for keeping client options
+                    clientOptions = RequestsCodec().\
+                        decode_HarClientOptions_from_Session(self)
                     entry._clientOptions.__dict__.update(clientOptions)
             self._entries.extend(new_entries)
 
-    def _update_entry(self, attr, value, index = -1):
+    def _update_entry(self, attr, value, index=-1):
+        # type: (str, Any, int) -> None
         try:
             setattr(self._entries[index], attr, value)
-        except Exception as err:
+        except Exception:
             pass
 
     def request(self, method, url, **kwargs):
+        # type: (str, str, **Any) -> requests.Response
 
         if self.keep_socket_options:
             # force stream=True
@@ -272,8 +319,10 @@ class HarSessionMixin(object):
 
         return resp
 
+
 class HarSession(HarSessionMixin, requests.Session):
 
     def __init__(self, filename=None):
+        # type: (Optional[str]) -> None
         requests.Session.__init__(self)
         HarSessionMixin.__init__(self, filename)

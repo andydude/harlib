@@ -1,3 +1,2 @@
 class CodecUtils(object):
     pass
-

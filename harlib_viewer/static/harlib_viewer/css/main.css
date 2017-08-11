@@ -1,0 +1,82 @@
+/*
+.dl-horizontal dt {
+    width: 300px;
+}
+
+.dl-horizontal dd {
+    margin-left: 320px;
+}
+*/
+
+dt > * {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+dd > * {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+#cookies table td {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+#cookies table td pre {
+    width: 200px;
+}
+
+.table-striped > tbody > tr:nth-child(even) > td pre,
+.table-striped > tbody > tr:nth-child(even) > th pre {
+  background-color: #ffffff;
+}
+
+.glyphicon.spinning {
+    transform-origin: 50% 58%;
+    animation: spin 1s infinite linear;
+    -webkit-animation: spin2 1s infinite linear;
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg); }
+    to { transform: scale(1) rotate(360deg); }
+}
+
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+}
+
+.navbar-inverse.navbar-oneticket {
+    background-image: none;
+    background-color: #2454A5;
+    font-size: 150%;
+    text-shadow: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-header .navbar-brand {
+    height: auto;
+    max-height: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-collapse .navbar-brand {
+    color: white;
+    font-size: 150%;
+    font-weight: bold;
+    text-shadow: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-collapse .nav.navbar-nav {
+    padding-top: 30px;
+    text-shadow: none;
+}
+
+.navbar-inverse.navbar-oneticket .navbar-collapse .nav.navbar-nav a{
+    color: white;
+}
+
+.panel.panel-primary .panel-heading {
+    background-image: none;
+    background-color: #2454A5;
+}

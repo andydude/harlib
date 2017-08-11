@@ -2,18 +2,15 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
-# 
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
+#
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 from collections import Mapping
-from six.moves import (http_client, urllib)
 from .metamodel import HarObject
-
 from .messages import (
-    HarNameValuePair,
     HarCookie,
     HarHeader,
     HarQueryStringParam,
@@ -22,7 +19,14 @@ from .messages import (
     HarMessage,
 )
 
-class HarRequestBody(HarMessageBody): # <postData>
+try:
+    from typing import Any, Dict, List, NamedTuple, Optional
+except ImportError:
+    pass
+
+
+class HarRequestBody(HarMessageBody):
+    # <postData>
 
     _required = [
         'mimeType',
@@ -30,7 +34,7 @@ class HarRequestBody(HarMessageBody): # <postData>
 
     _optional = {
         '_size': -1,
-        'text': '', # HAR-1.2 required
+        'text': '',  # HAR-1.2 required
         'comment': '',
         '_compression': -1,
         '_encoding': '',
@@ -44,6 +48,7 @@ class HarRequestBody(HarMessageBody): # <postData>
     }
 
     def __init__(self, obj=None):
+        # type: (Dict) -> None
         har = obj or None
 
         if isinstance(obj, Mapping):
@@ -55,7 +60,27 @@ class HarRequestBody(HarMessageBody): # <postData>
 
         super(HarRequestBody, self).__init__(har)
 
+
 class HarRequest(HarMessage):
+    # type: NamedTuple('HarRequest', [
+    #     ('method', str),
+    #     ('url', str),
+    #     ('cookies', List[HarCookie]),
+    #     ('headers', List[HarHeader]),
+    #     ('queryString', List[HarQueryStringParam]),
+    #     ('httpVersion', str),
+    #     ('headersSize', int),
+    #     ('bodySize', int),
+    #     ('postData', HarRequestBody),
+    #     ('_requestLine', str),
+    #     ('_requestLineSize', str),
+    #     ('_endpointID', str),
+    #     ('_originURL', str),
+    #     ('_required', List[str]),
+    #     ('_optional', Dict[str, Any]),
+    #     ('_types', Dict[str, Any]),
+    #     ('_ordered', List[str]),
+    # ])
 
     _required = [
         'method',
@@ -104,6 +129,7 @@ class HarRequest(HarMessage):
     ]
 
     def __init__(self, obj=None):
+        # type: (Dict) -> None
         har = obj or None
 
         if isinstance(obj, Mapping):
@@ -117,98 +143,19 @@ class HarRequest(HarMessage):
 
     @property
     def size(self):
+        # type: () -> int
         return self.headersSize + self.bodySize
 
     def get_param(self, name, default=None):
+        # type: (str, str) -> Optional[str]
         for param in self.queryString:
             if param.name == name:
                 return param.value
         return default
-    
+
     def post_param(self, name, default=None):
+        # type: (str, str) -> Optional[str]
         for param in self.postData.params:
             if param.name == name:
                 return param
         return default
-    
-    #def get_query(self, obj):
-    #    if isinstance(obj, requests.Request):
-    #        d = map(HarNameValuePair.pair2dict, obj.params.items())
-    #    else:
-    #        query = '?'
-    #        if  '?' in obj.url:
-    #            query += obj.url.split('?', 1)[1]
-    #        d = HarQueryStringParam.decode_query(query)
-    #    return d
-
-    #def get_body(self, obj):
-    #    har = dict()
-    #
-    #    if isinstance(obj, HarObject):
-    #        har = obj.to_json()
-    #
-    #    if isinstance(obj, django.http.request.HttpRequest):
-    #        har['mimeType'] = 'UNKNOWN'
-    #        har['text'] = obj.body
-    #        har['_size'] = len(har['text'])
-    #        try:
-    #            query = '?' + har['text']
-    #            har['params'] = HarQueryStringParam.decode_query(query)
-    #        except:
-    #            har['params'] = []
-    #
-    #    if isinstance(obj, http_client.HTTPResponse):
-    #        har['mimeType'] = 'UNKNOWN'
-    #        har['text'] = ''
-    #        har['_size'] = 0
-    #        har['params'] = []
-    #
-    #    if isinstance(obj, requests.PreparedRequest):
-    #        body_text = obj.body or ''
-    #
-    #        har['mimeType'] = obj.headers.get('Content-Type')
-    #        har['text'] = body_text or ''
-    #        har['_size'] = len(har['text'])
-    #
-    #        try:
-    #            query = '?' + har['text']
-    #            har['params'] = HarQueryStringParam.decode_query(query)
-    #        except:
-    #            har['params'] = []
-    #
-    #
-    #    if isinstance(obj, requests.Request):
-    #        body_params = {}
-    #        body_params.update(obj.data)
-    #        body_params.update(obj.files)
-    #
-    #        har['mimeType'] = 'UNKNOWN'
-    #        try:
-    #            har['text'] = HarQueryStringParam.encode_query(body_params)
-    #        except:
-    #            har['text'] = ''
-    #        har['_size'] = len(har['text'])
-    #
-    #        har['params'] = body_params.items()
-    #
-    #        if obj.headers:
-    #            if obj.headers.get('Content-Type'):
-    #                har['mimeType'] = obj.headers.get('Content-Type')
-    #
-    #    use_base64 = False
-    #    try:
-    #        har['text'].decode('ascii')
-    #    except UnicodeDecodeError:
-    #        use_base64 = True
-    #
-    #
-    #    if use_base64:
-    #        har['encoding'] = 'base64'
-    #        har['text'] = base64.b64encode(har['text'])
-    #    return har
-
-    #def to_requests(self):
-    #
-    #def to_urllib2(self):
-    #    return self.encode(urllib.request.Request)
-

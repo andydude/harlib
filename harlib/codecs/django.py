@@ -2,18 +2,19 @@
 # -*- coding: utf-8 -*-
 #
 # harlib
-# Copyright (c) 2014, Andrew Robbins, All rights reserved.
+# Copyright (c) 2014-2017, Andrew Robbins, All rights reserved.
 #
-# This library ("it") is free software; it is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; you can redistribute it and/or modify it under the terms of the
-# GNU Lesser General Public License ("LGPLv3") <https://www.gnu.org/licenses/lgpl.html>.
+# This library ("it") is free software; it is distributed in the hope that it
+# will be useful, but WITHOUT ANY WARRANTY; you can redistribute it and/or
+# modify it under the terms of LGPLv3 <https://www.gnu.org/licenses/lgpl.html>.
 from __future__ import absolute_import
 
 import wsgiref.handlers
 import django.http.request
 import django.http.response
-import harlib
 import os
+from . import utils
+
 
 class DjangoCodec(object):
 
@@ -32,25 +33,16 @@ class DjangoCodec(object):
     def __init__(self):
         object.__init__(self)
 
-    ##########################################################################################
-    ## Encoding
+    # Encoding
 
     def encode(self, har, raw_class):
-        assert raw_class.__module__ in self.modules
-        method_name = 'encode_%s_to_%s' % (
-            har.__class__.__name__, raw_class.__name__)
-        return getattr(self, method_name)(har)
+        # assert raw_class.__module__ in self.modules
+        # method_name = 'encode_%s_to_%s' % (
+        #     har.__class__.__name__, raw_class.__name__)
+        # return getattr(self, method_name)(har)
+        raise NotImplementedError
 
-    def encode_HarRequest_to_HttpRequest(self, har):
-        req = self.request_class()
-        return req
-
-    def encode_HarResponse_to_HttpResponse(self, har):
-        resp = self.response_class()
-        return resp
-
-    ##########################################################################################
-    ## Decoding
+    # Decoding
 
     def decode(self, raw, har_class):
         assert raw.__class__.__module__ in self.modules
@@ -73,7 +65,8 @@ class DjangoCodec(object):
         har['headers'] = self.decode_HarHeaders_from_HttpRequest(raw)
         har['cookies'] = self.decode_HarCookies_from_HttpRequest(raw)
         har['postData'] = raw
-        har['queryString'] = self.decode_HarQueryStringParams_from_HttpRequest(raw)
+        har['queryString'] = \
+            self.decode_HarQueryStringParams_from_HttpRequest(raw)
         har['headersSize'] = -1
         har['bodySize'] = -1
         return har
@@ -93,8 +86,7 @@ class DjangoCodec(object):
         return har
 
     def decode_HarCookies_from_HttpRequest(self, raw):
-        #return raw._get_cookies().items()
-        return raw.COOKIES.items()
+        return list(raw.COOKIES.items())
 
     def decode_HarHeaders_from_HttpRequest(self, raw):
         headers = []
@@ -108,9 +100,8 @@ class DjangoCodec(object):
         return []
 
     def decode_HarHeaders_from_HttpResponse(self, raw):
-        headers = map(lambda i: (i[1][0],i[1][1]), raw._headers.items())
+        headers = [(i[1][0], i[1][1]) for i in list(raw._headers.items())]
         return headers
-
 
     def decode_HarRequestBody_from_HttpRequest(self, raw):
         har = self.dict_class()
@@ -135,30 +126,55 @@ class DjangoCodec(object):
         har['compression'] = -1
         return har
 
-    decode_HarRequest_from_WSGIRequest = decode_HarRequest_from_HttpRequest
-    decode_HarRequestBody_from_WSGIRequest = decode_HarRequestBody_from_HttpRequest
-    decode_HarResponse_from_HttpResponseBadRequest = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponseForbidden = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponseGone = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponseNotAllowed = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponseNotFound = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponseNotModified = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponsePermanentRedirect = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponseRedirect = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_HttpResponseServerError = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_Response = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_SimpleTemplateResponse = decode_HarResponse_from_HttpResponse
-    decode_HarResponse_from_TemplateResponse = decode_HarResponse_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseBadRequest = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseForbidden = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseGone = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseNotAllowed = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseNotFound = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseNotModified = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponsePermanentRedirect = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseRedirect = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_HttpResponseServerError = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_Response = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_SimpleTemplateResponse = decode_HarResponseBody_from_HttpResponse
-    decode_HarResponseBody_from_TemplateResponse = decode_HarResponseBody_from_HttpResponse
-
+    decode_HarRequest_from_WSGIRequest = \
+        decode_HarRequest_from_HttpRequest
+    decode_HarRequestBody_from_WSGIRequest = \
+        decode_HarRequestBody_from_HttpRequest
+    decode_HarResponse_from_HttpResponseBadRequest = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseForbidden = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseGone = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseNotAllowed = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseNotFound = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseNotModified = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponsePermanentRedirect = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseRedirect = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_HttpResponseServerError = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_Response = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_SimpleTemplateResponse = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponse_from_TemplateResponse = \
+        decode_HarResponse_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseBadRequest = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseForbidden = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseGone = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseNotAllowed = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseNotFound = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseNotModified = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponsePermanentRedirect = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseRedirect = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_HttpResponseServerError = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_Response = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_SimpleTemplateResponse = \
+        decode_HarResponseBody_from_HttpResponse
+    decode_HarResponseBody_from_TemplateResponse = \
+        decode_HarResponseBody_from_HttpResponse
