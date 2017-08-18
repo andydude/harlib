@@ -11,7 +11,7 @@
 harlib - HTTP Archive (HAR) format library
 '''
 from __future__ import absolute_import
-from harlib.test_utils import TestUtils, HTTPBIN_ORIGIN
+from harlib.test_utils import TestUtils
 from harlib.objects import HarPage, HarPageTimings
 
 
