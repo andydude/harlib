@@ -39,7 +39,7 @@ else:
             HarObject, HarEntry,
             HarResponse, HarRequest)  # noqa: F401
     except ImportError as err:
-        logger.error(repr(err), exc_info=True)
+        pass
 
     # only import HarSession if requests is installed
     try:
@@ -48,11 +48,11 @@ else:
             HarSessionMixin,
             HarSession)  # noqa: F401
     except ImportError as err:
-        logger.error(repr(err), exc_info=True)
+        pass
 
     # only import if django is installed
     try:
         import django
         from harlib_viewer import middleware
     except ImportError as err:
-        logger.error(repr(err), exc_info=True)
+        pass

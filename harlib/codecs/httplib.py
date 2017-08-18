@@ -58,6 +58,15 @@ class HttplibCodec(object):
             def close(self):
                 pass
 
+            def sendall(self, data):
+                pass
+
+            def readline(self, bufsize=1024):
+                return ''
+            
+            def read(self, bufsize=1024):
+                return ''
+            
             def makefile(self, mode, bufsize=1024):
                 self.bufsize = bufsize
                 return self

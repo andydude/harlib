@@ -261,11 +261,12 @@ class RequestsCodec(object):
         req = RequestCls(method=har.method, url=har.url)
         req.headers = HeadersCls(headers)
         req.cookies = CookiesCls(cookies) if har.cookies else None
-        req.params = dict(list(map(harlib.utils.pair_from_obj, har.queryString)))
+        req.params = dict(list(map(harlib.utils.pair_from_obj,
+                                   har.queryString)))
 
         if har.postData:
             req.data = dict(list(map(harlib.utils.pair_from_obj,
-                                har.postData.params)))
+                                     har.postData.params)))
 
         # req.hooks -- impossible
         # req.auth -- impossible
@@ -357,11 +358,13 @@ class RequestsCodec(object):
         har = self.dict_class()
         proxies = self.dict_class()
         try:
-            proxies['http'] = list(raw.adapters['http://'].proxy_manager.keys())[0]
+            proxies['http'] = list(raw.adapters['http://'].
+                                   proxy_manager.keys())[0]
         except Exception:
             pass
         try:
-            proxies['https'] = list(raw.adapters['https://'].proxy_manager.keys())[0]
+            proxies['https'] = list(raw.adapters['https://'].
+                                    proxy_manager.keys())[0]
         except Exception:
             pass
         har['proxies'] = proxies
